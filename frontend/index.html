@@ -8,7 +8,34 @@
 </head>
 <body>
 
-  <div id="navbar-container"></div>
+  <!-- Top Sticky Navigation Bar (Instant Render) -->
+  <div id="navbar-container">
+    <nav class="navbar">
+      <div class="container navbar-inner">
+        <a href="./index.html" class="brand">
+          <div class="brand-badge">🍲</div>
+          <span>Advance<span class="highlight">Foodnest</span></span>
+        </a>
+
+        <ul class="nav-links">
+          <li><a href="./index.html" class="nav-link active">Home</a></li>
+          <li><a href="./customer/restaurants.html" class="nav-link">Restaurants</a></li>
+          <li><a href="./restaurant/login.html" class="nav-link">For Restaurants</a></li>
+          <li><a href="./deliveryman/login.html" class="nav-link">For Riders</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <a href="./customer/cart.html" class="btn btn-outline btn-sm cart-badge-wrap" title="View Cart">
+            <span>🛒</span>
+            <span>Cart</span>
+            <span class="cart-counter" id="nav-cart-count" style="display: none;">0</span>
+          </a>
+          <a href="./customer/login.html" class="btn btn-outline btn-sm">Log In</a>
+          <a href="./customer/register.html" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+      </div>
+    </nav>
+  </div>
 
   <!-- Hero Section -->
   <section class="hero-section">
@@ -92,13 +119,58 @@
           <span class="hero-pill" style="margin-bottom: 8px;">Curated For You</span>
           <h2 style="font-size: 2rem;">Featured Restaurants</h2>
         </div>
-        <a href="/customer/restaurants.html" class="btn btn-outline-primary btn-sm">View All Restaurants →</a>
+        <a href="./customer/restaurants.html" class="btn btn-outline-primary btn-sm">View All Restaurants →</a>
       </div>
 
       <div class="grid-restaurants" id="restaurants-grid">
-        <div class="card skeleton" style="height: 320px;"></div>
-        <div class="card skeleton" style="height: 320px;"></div>
-        <div class="card skeleton" style="height: 320px;"></div>
+        <!-- Default Pre-rendered Interactive Restaurant Cards -->
+        <div class="card" onclick="window.location.href='./customer/restaurant-menu.html?id=1'" style="cursor: pointer;">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?w=600" alt="Fastfoods" class="card-img">
+            <span class="card-badge">Burgers & Fast Food</span>
+            <span class="card-rating">★ 4.8</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Fastfoods</h3>
+            <p class="card-subtitle">100 Feet Road, Indiranagar, Bengaluru</p>
+            <div class="card-footer">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">🕒 25-35 mins</span>
+              <a href="./customer/restaurant-menu.html?id=1" class="btn btn-primary btn-sm">View Menu</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" onclick="window.location.href='./customer/restaurant-menu.html?id=2'" style="cursor: pointer;">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600" alt="Foodies" class="card-img">
+            <span class="card-badge">Biryani & Mughlai</span>
+            <span class="card-rating">★ 4.9</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Foodies</h3>
+            <p class="card-subtitle">80 Feet Road, Koramangala 4th Block, Bengaluru</p>
+            <div class="card-footer">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">🕒 30-40 mins</span>
+              <a href="./customer/restaurant-menu.html?id=2" class="btn btn-primary btn-sm">View Menu</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" onclick="window.location.href='./customer/restaurant-menu.html?id=3'" style="cursor: pointer;">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=600" alt="SpiceGarden" class="card-img">
+            <span class="card-badge">South Indian & Pure Veg</span>
+            <span class="card-rating">★ 4.7</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">SpiceGarden</h3>
+            <p class="card-subtitle">27th Main Road, HSR Layout Sector 1, Bengaluru</p>
+            <div class="card-footer">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">🕒 20-30 mins</span>
+              <a href="./customer/restaurant-menu.html?id=3" class="btn btn-primary btn-sm">View Menu</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -123,7 +195,7 @@
             Browse multiple verified eateries, add items to your cart, enjoy server-validated pricing, and track your delivery live on an interactive map.
           </p>
           <div style="margin-top: auto; display: flex; gap: 10px;">
-            <a href="/customer/restaurants.html" class="btn btn-primary btn-sm btn-full">Explore Menus</a>
+            <a href="./customer/restaurants.html" class="btn btn-primary btn-sm btn-full">Explore Menus</a>
           </div>
         </div>
 
@@ -135,7 +207,7 @@
             Register your kitchen, manage your exclusive dishes with strict data isolation, accept incoming orders, and mark them READY to auto-dispatch riders.
           </p>
           <div style="margin-top: auto; display: flex; gap: 10px;">
-            <a href="/restaurant/login.html" class="btn btn-dark btn-sm btn-full">Restaurant Portal</a>
+            <a href="./restaurant/login.html" class="btn btn-dark btn-sm btn-full">Restaurant Portal</a>
           </div>
         </div>
 
@@ -147,7 +219,7 @@
             Toggle your availability on or off, receive automatic order dispatches, broadcast permission-based live GPS coordinates, and deliver hot food.
           </p>
           <div style="margin-top: auto; display: flex; gap: 10px;">
-            <a href="/deliveryman/login.html" class="btn btn-outline-primary btn-sm btn-full">Rider Portal</a>
+            <a href="./deliveryman/login.html" class="btn btn-outline-primary btn-sm btn-full">Rider Portal</a>
           </div>
         </div>
       </div>
@@ -201,17 +273,17 @@
         <div>
           <h4 style="color: #FFF; font-size: 1rem; margin-bottom: 16px;">Portals</h4>
           <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: #A1A1AA;">
-            <li><a href="/customer/login.html" style="color: inherit;">Customer Login</a></li>
-            <li><a href="/restaurant/login.html" style="color: inherit;">Restaurant Partner</a></li>
-            <li><a href="/deliveryman/login.html" style="color: inherit;">Delivery Partner</a></li>
+            <li><a href="./customer/login.html" style="color: inherit;">Customer Login</a></li>
+            <li><a href="./restaurant/login.html" style="color: inherit;">Restaurant Partner</a></li>
+            <li><a href="./deliveryman/login.html" style="color: inherit;">Delivery Partner</a></li>
           </ul>
         </div>
         <div>
           <h4 style="color: #FFF; font-size: 1rem; margin-bottom: 16px;">Top Cuisines</h4>
           <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: #A1A1AA;">
-            <li><a href="/customer/restaurants.html?cuisine=Burgers" style="color: inherit;">Burgers & Fries</a></li>
-            <li><a href="/customer/restaurants.html?cuisine=Biryani" style="color: inherit;">Dum Biryani</a></li>
-            <li><a href="/customer/restaurants.html?cuisine=South Indian" style="color: inherit;">South Indian Dosas</a></li>
+            <li><a href="./customer/restaurants.html?cuisine=Burgers" style="color: inherit;">Burgers & Fries</a></li>
+            <li><a href="./customer/restaurants.html?cuisine=Biryani" style="color: inherit;">Dum Biryani</a></li>
+            <li><a href="./customer/restaurants.html?cuisine=South Indian" style="color: inherit;">South Indian Dosas</a></li>
           </ul>
         </div>
         <div>
@@ -229,20 +301,34 @@
 
   <script type="module">
     import { checkAuth, renderNavbar, getBaseUrl } from './shared/js/auth.js';
-    import { apiRequest } from './shared/js/api.js';
+    import { apiRequest, getCartTotalCount } from './shared/js/api.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      await checkAuth();
-      renderNavbar('home');
+    // Synchronous immediate render
+    renderNavbar('home');
 
-      // Load restaurants
+    // Update cart badge right away
+    const cartBadge = document.getElementById('nav-cart-count');
+    if (cartBadge) {
+      const c = getCartTotalCount();
+      cartBadge.textContent = c;
+      cartBadge.style.display = c > 0 ? 'flex' : 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Async auth check in background
+      checkAuth().then(user => {
+        if (user) renderNavbar('home');
+      });
+
+      // Load live restaurants from API
       loadFeaturedRestaurants();
 
       // Category click handlers
       document.querySelectorAll('.category-chip').forEach(chip => {
         chip.addEventListener('click', () => {
           const cat = chip.dataset.cat;
-          window.location.href = `${getBaseUrl()}customer/restaurants.html?cuisine=${encodeURIComponent(cat)}`;
+          const base = getBaseUrl();
+          window.location.href = `${base}customer/restaurants.html?cuisine=${encodeURIComponent(cat)}`;
         });
       });
     });
@@ -252,8 +338,7 @@
       const res = await apiRequest('/restaurants');
 
       if (!res.success || !res.data || res.data.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No restaurants found. Please ensure backend has seeded data.</div>';
-        return;
+        return; // Keep default pre-rendered cards
       }
 
       const base = getBaseUrl();
@@ -269,7 +354,7 @@
             <p class="card-subtitle">${r.address}</p>
             <div class="card-footer">
               <span style="font-size: 0.85rem; color: var(--text-muted);">🕒 30-40 mins</span>
-              <span class="btn btn-primary btn-sm">View Menu</span>
+              <a href="${base}customer/restaurant-menu.html?id=${r.id}" class="btn btn-primary btn-sm">View Menu</a>
             </div>
           </div>
         </div>
