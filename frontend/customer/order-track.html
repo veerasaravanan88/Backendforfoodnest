@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Order Tracking — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-md" style="padding-top: 36px; padding-bottom: 70px;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <span class="hero-pill" style="margin-bottom: 6px;">Live Status</span>
+        <h1 style="font-size: 2rem;">Track Order <span id="track-order-number" style="color: var(--primary);">...</span></h1>
+      </div>
+      <a href="/customer/orders.html" class="btn btn-outline btn-sm">← Back to Orders</a>
+    </div>
+
+    <!-- Animated Status Timeline -->
+    <div class="card" style="padding: 28px; background: #FFF; margin-bottom: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-size: 0.88rem; color: var(--text-muted); font-weight: 600;">Current Status:</span>
+        <span id="current-status-badge" class="status-badge status-placed">PLACED</span>
+      </div>
+
+      <div class="timeline" id="status-timeline">
+        <div class="timeline-step" data-step="PLACED">
+          <div class="timeline-icon">1</div>
+          <div class="timeline-label">Placed</div>
+        </div>
+        <div class="timeline-step" data-step="ACCEPTED">
+          <div class="timeline-icon">2</div>
+          <div class="timeline-label">Accepted</div>
+        </div>
+        <div class="timeline-step" data-step="PREPARING">
+          <div class="timeline-icon">3</div>
+          <div class="timeline-label">Preparing</div>
+        </div>
+        <div class="timeline-step" data-step="READY">
+          <div class="timeline-icon">4</div>
+          <div class="timeline-label">Ready</div>
+        </div>
+        <div class="timeline-step" data-step="PICKED_UP">
+          <div class="timeline-icon">5</div>
+          <div class="timeline-label">Picked Up</div>
+        </div>
+        <div class="timeline-step" data-step="OUT_FOR_DELIVERY">
+          <div class="timeline-icon">6</div>
+          <div class="timeline-label">On Way</div>
+        </div>
+        <div class="timeline-step" data-step="DELIVERED">
+          <div class="timeline-icon">7</div>
+          <div class="timeline-label">Delivered</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Map & Rider Info -->
+    <div class="card" style="padding: 24px; background: #FFF; margin-bottom: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+          <span>🗺️</span> Real-Time Delivery Tracking
+        </h3>
+        <span id="map-status-note" style="font-size: 0.82rem; color: var(--text-muted);">Updating location...</span>
+      </div>
+
+      <div id="tracking-map"></div>
+
+      <!-- Rider Info Banner -->
+      <div id="rider-card" style="margin-top: 20px; background: var(--gray-bg); border-radius: var(--radius-md); padding: 18px; display: none; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: var(--radius-full); background: var(--primary); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            🛵
+          </div>
+          <div>
+            <div id="rider-name" style="font-weight: 700; font-size: 1.05rem;">Rider Assigned</div>
+            <div id="rider-vehicle" style="font-size: 0.85rem; color: var(--text-muted);">Vehicle: Bike</div>
+          </div>
+        </div>
+        <div>
+          <a id="rider-call-btn" href="#" class="btn btn-outline-primary btn-sm">
+            📞 Call Rider
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Items & Restaurant Breakdown -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div class="card" style="padding: 24px; background: #FFF;">
+        <h3 style="font-size: 1.15rem; margin-bottom: 14px;">Restaurant & Destination</h3>
+        <div style="margin-bottom: 12px;">
+          <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 700;">PREPARED BY</div>
+          <div id="order-restaurant-name" style="font-weight: 700; font-size: 1rem;">...</div>
+          <div id="order-restaurant-addr" style="font-size: 0.85rem; color: var(--text-muted);">...</div>
+        </div>
+        <div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 700;">DELIVERY DESTINATION</div>
+          <div id="order-delivery-addr" style="font-size: 0.9rem; color: var(--dark);">...</div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 24px; background: #FFF;">
+        <h3 style="font-size: 1.15rem; margin-bottom: 14px;">Order Summary</h3>
+        <div id="order-items-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+        </div>
+        <div style="border-top: 1px solid var(--border); padding-top: 12px; display: flex; justify-content: space-between; font-weight: 800; font-size: 1.15rem;">
+          <span>Total Paid / COD</span>
+          <span id="order-total-price" style="color: var(--primary);">₹0.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+
+    const ORDER_STEPS = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+
+    let map = null;
+    let riderMarker = null;
+    let defaultCoords = [12.9716, 77.5946]; // Bengaluru default coordinates
+    let pollInterval = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth();
+      if (!user) return;
+      renderNavbar('orders');
+
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get('id');
+
+      if (!orderId) {
+        alert('No order specified.');
+        window.location.href = '/customer/orders.html';
+        return;
+      }
+
+      initMap();
+      loadOrderDetails(orderId);
+
+      // Poll tracking data every 4 seconds
+      pollInterval = setInterval(() => {
+        loadTrackingData(orderId);
+      }, 4000);
+    });
+
+    function initMap() {
+      map = L.map('tracking-map').setView(defaultCoords, 14);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Destination Marker (Customer location approx)
+      const customerIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="background: #171717; color: #FFF; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">🏠</div>',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
+      L.marker(defaultCoords, { icon: customerIcon }).addTo(map).bindPopup('Delivery Address');
+    }
+
+    async function loadOrderDetails(orderId) {
+      const res = await apiRequest(`/orders/${orderId}`);
+      if (!res.success || !res.data) {
+        alert(res.message || 'Unable to load order');
+        return;
+      }
+
+      const o = res.data;
+      document.getElementById('track-order-number').textContent = o.orderNumber;
+      document.getElementById('current-status-badge').textContent = o.status.replace(/_/g, ' ');
+      document.getElementById('current-status-badge').className = `status-badge status-${o.status.toLowerCase()}`;
+
+      updateTimeline(o.status);
+
+      document.getElementById('order-restaurant-name').textContent = o.restaurantName;
+      document.getElementById('order-restaurant-addr').textContent = o.restaurantAddress;
+      document.getElementById('order-delivery-addr').textContent = o.deliveryAddress;
+      document.getElementById('order-total-price').textContent = `₹${o.totalAmount}`;
+
+      const itemsCont = document.getElementById('order-items-container');
+      itemsCont.innerHTML = o.items.map(i => `
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+          <span>${i.quantity}x ${i.dishName}</span>
+          <span style="font-weight: 600;">₹${i.itemTotal}</span>
+        </div>
+      `).join('');
+
+      // Rider Card details
+      if (o.deliveryAssignment && o.deliveryAssignment.deliveryManName) {
+        const da = o.deliveryAssignment;
+        document.getElementById('rider-card').style.display = 'flex';
+        document.getElementById('rider-name').textContent = da.deliveryManName;
+        document.getElementById('rider-vehicle').textContent = `Vehicle: ${da.vehicleType || 'Motorbike'} • Status: ${da.status}`;
+        document.getElementById('rider-call-btn').href = `tel:${da.deliveryManPhone}`;
+      }
+
+      loadTrackingData(orderId);
+    }
+
+    async function loadTrackingData(orderId) {
+      const res = await apiRequest(`/tracking/orders/${orderId}`);
+      const note = document.getElementById('map-status-note');
+
+      if (res.success && res.data) {
+        const d = res.data;
+        if (d.orderStatus) {
+          updateTimeline(d.orderStatus);
+          document.getElementById('current-status-badge').textContent = d.orderStatus.replace(/_/g, ' ');
+          document.getElementById('current-status-badge').className = `status-badge status-${d.orderStatus.toLowerCase()}`;
+        }
+
+        if (d.latitude && d.longitude) {
+          const latLng = [d.latitude, d.longitude];
+          note.textContent = `Live GPS: Updated ${new Date(d.updatedAt).toLocaleTimeString()}`;
+
+          if (!riderMarker) {
+            const riderIcon = L.divIcon({
+              className: 'rider-pin',
+              html: '<div style="background: #FF6B00; color: #FFF; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border: 3px solid #FFF; box-shadow: 0 4px 14px rgba(255,107,0,0.5);">🛵</div>',
+              iconSize: [40, 40],
+              iconAnchor: [20, 20]
+            });
+            riderMarker = L.marker(latLng, { icon: riderIcon }).addTo(map).bindPopup('Delivery Partner Location');
+          } else {
+            riderMarker.setLatLng(latLng);
+          }
+
+          map.panTo(latLng);
+        } else {
+          note.textContent = d.isLiveTrackingActive ? 'Waiting for rider GPS broadcast...' : 'Location tracking inactive';
+        }
+
+        if (d.orderStatus === 'DELIVERED') {
+          clearInterval(pollInterval);
+          note.textContent = 'Order Delivered! 🎉';
+        }
+      }
+    }
+
+    function updateTimeline(currentStatus) {
+      const currentIdx = ORDER_STEPS.indexOf(currentStatus);
+      document.querySelectorAll('#status-timeline .timeline-step').forEach(step => {
+        const stepName = step.dataset.step;
+        const stepIdx = ORDER_STEPS.indexOf(stepName);
+
+        step.classList.remove('active', 'completed');
+        if (stepIdx < currentIdx) {
+          step.classList.add('completed');
+        } else if (stepIdx === currentIdx) {
+          step.classList.add('active');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deliveries History — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-md" style="padding-top: 40px; padding-bottom: 70px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h1 style="font-size: 2rem;">My Deliveries History</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Track all completed deliveries and assignments.</p>
+      </div>
+      <a href="/deliveryman/dashboard.html" class="btn btn-primary btn-sm">← Back to Dispatch Hub</a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Status</th>
+            <th>Assigned Date</th>
+            <th>Delivered Date</th>
+          </tr>
+        </thead>
+        <tbody id="deliveries-tbody">
+          <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 40px;">Loading your deliveries...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('DELIVERY_MAN');
+      if (!user) return;
+      renderNavbar('deliveries');
+
+      loadDeliveries();
+    });
+
+    async function loadDeliveries() {
+      const res = await apiRequest('/deliveryman/me/deliveries');
+      const tbody = document.getElementById('deliveries-tbody');
+
+      if (!res.success || !res.data || res.data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 40px;">No deliveries completed yet. Online riders receive automatic dispatches!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = res.data.map(d => `
+        <tr>
+          <td style="font-weight: 700;">${d.orderNumber}</td>
+          <td><span class="status-badge status-${d.status.toLowerCase()}">${d.status}</span></td>
+          <td style="color: var(--text-muted); font-size: 0.85rem;">${new Date(d.assignedAt).toLocaleString()}</td>
+          <td style="color: var(--text-muted); font-size: 0.85rem;">${d.deliveredAt ? new Date(d.deliveredAt).toLocaleString() : '--'}</td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

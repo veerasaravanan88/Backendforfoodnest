@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Profile — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div style="padding: 10px 12px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Restaurant Partner</div>
+        <div id="sidebar-restaurant-name" style="font-size: 1.15rem; font-weight: 800; color: var(--dark);">...</div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li><a href="/restaurant/dashboard.html" class="sidebar-link">📊 Dashboard</a></li>
+        <li><a href="/restaurant/dishes.html" class="sidebar-link">🍲 Dishes & Menu</a></li>
+        <li><a href="/restaurant/orders.html" class="sidebar-link">📦 Orders Dispatch</a></li>
+        <li><a href="/restaurant/reports.html" class="sidebar-link">📈 Sales Reports</a></li>
+        <li><a href="/restaurant/profile.html" class="sidebar-link active">⚙️ Kitchen Profile</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <div class="container-sm" style="margin: 0;">
+        <div style="margin-bottom: 28px;">
+          <h1 style="font-size: 2rem;">Kitchen Profile & Information</h1>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Update the public details displayed to food delivery customers.</p>
+        </div>
+
+        <div class="form-card">
+          <form id="restaurant-profile-form">
+            <div class="form-group">
+              <label class="form-label" for="email">Business Email (Read-only)</label>
+              <input type="email" id="email" class="form-input" disabled style="background: var(--gray-bg); cursor: not-allowed;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label" for="name">Restaurant Name</label>
+                <input type="text" id="name" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="ownerName">Owner Name</label>
+                <input type="text" id="ownerName" class="form-input" required>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div class="form-group">
+                <label class="form-label" for="phone">Contact Phone</label>
+                <input type="tel" id="phone" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cuisineType">Cuisine Style</label>
+                <input type="text" id="cuisineType" class="form-input" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="imageUrl">Cover Photo URL</label>
+              <input type="url" id="imageUrl" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="address">Restaurant Address</label>
+              <textarea id="address" class="form-textarea" rows="3" required></textarea>
+            </div>
+
+            <button type="submit" id="save-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+              Save Kitchen Profile
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('RESTAURANT');
+      if (!user) return;
+      renderNavbar();
+
+      document.getElementById('sidebar-restaurant-name').textContent = user.fullName || 'My Restaurant';
+
+      loadProfile();
+
+      document.getElementById('restaurant-profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        const payload = {
+          name: document.getElementById('name').value.trim(),
+          ownerName: document.getElementById('ownerName').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          cuisineType: document.getElementById('cuisineType').value.trim(),
+          imageUrl: document.getElementById('imageUrl').value.trim(),
+          address: document.getElementById('address').value.trim()
+        };
+
+        const res = await apiRequest('/restaurant/me', {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          showToast('Profile updated successfully!', 'success');
+        } else {
+          showToast(res.message || 'Error updating profile', 'error');
+        }
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Kitchen Profile';
+      });
+    });
+
+    async function loadProfile() {
+      const res = await apiRequest('/restaurant/me');
+      if (res.success && res.data) {
+        const p = res.data;
+        document.getElementById('email').value = p.email;
+        document.getElementById('name').value = p.name;
+        document.getElementById('ownerName').value = p.ownerName;
+        document.getElementById('phone').value = p.phone;
+        document.getElementById('cuisineType').value = p.cuisineType;
+        document.getElementById('imageUrl').value = p.imageUrl || '';
+        document.getElementById('address').value = p.address;
+      }
+    }
+  </script>
+</body>
+</html>

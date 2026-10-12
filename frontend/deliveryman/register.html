@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Become a Delivery Partner — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body style="background: radial-gradient(circle at top right, #FFF3EB 0%, #FFFDF9 60%);">
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-sm" style="margin-top: 40px; margin-bottom: 60px;">
+    <div class="form-card">
+      <div style="text-align: center; margin-bottom: 28px;">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">🛵</div>
+        <h2 style="font-size: 1.8rem;">Join Our Delivery Fleet</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+          Flexible hours, automatic assignment dispatch, and timely payouts.
+        </p>
+      </div>
+
+      <form id="rider-register-form">
+        <div class="form-group">
+          <label class="form-label" for="fullName">Full Legal Name</label>
+          <input type="text" id="fullName" class="form-input" placeholder="e.g. David Vance" required minlength="2">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-input" placeholder="rider@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone Number</label>
+            <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543210" required minlength="7">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="vehicleType">Vehicle Type</label>
+            <select id="vehicleType" class="form-select">
+              <option value="Motorbike (Bike)">Motorbike / Scooter</option>
+              <option value="Electric Scooter">Electric Scooter (EV)</option>
+              <option value="Bicycle">Bicycle</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="password">Password (min. 6 characters)</label>
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6">
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+          Register as Delivery Partner
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
+        Already registered? <a href="/deliveryman/login.html" style="color: var(--primary); font-weight: 600;">Sign in here</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (user && user.role === 'DELIVERY_MAN') {
+        window.location.href = '/deliveryman/dashboard.html';
+        return;
+      }
+      renderNavbar();
+
+      const form = document.getElementById('rider-register-form');
+      const submitBtn = document.getElementById('submit-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Registering rider...';
+
+        const payload = {
+          fullName: document.getElementById('fullName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          vehicleType: document.getElementById('vehicleType').value,
+          password: document.getElementById('password').value
+        };
+
+        const res = await apiRequest('/auth/deliveryman/register', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          showToast('Rider account created! Logging you in...', 'success');
+          // Auto login
+          const loginRes = await apiRequest('/auth/deliveryman/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: payload.email, password: payload.password })
+          });
+          if (loginRes.success) {
+            setTimeout(() => window.location.href = '/deliveryman/dashboard.html', 500);
+          } else {
+            setTimeout(() => window.location.href = '/deliveryman/login.html', 500);
+          }
+        } else {
+          showToast(res.message || 'Registration failed', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Register as Delivery Partner';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

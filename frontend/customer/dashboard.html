@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container" style="padding-top: 40px; padding-bottom: 60px;">
+    <!-- Welcome Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: gap; gap: 16px;">
+      <div>
+        <h1 style="font-size: 2.2rem;">Hello, <span id="user-name" style="color: var(--primary);">Customer</span>! 👋</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">Track ongoing deliveries, re-order meals, and manage your account.</p>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <a href="/customer/restaurants.html" class="btn btn-primary">Find Restaurants 🍽️</a>
+        <a href="/customer/cart.html" class="btn btn-outline">My Cart 🛒</a>
+      </div>
+    </div>
+
+    <!-- Active Orders Alert Box -->
+    <div id="active-orders-section" style="margin-bottom: 40px;">
+      <h2 style="font-size: 1.35rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>🔥</span> Active Deliveries
+      </h2>
+      <div id="active-orders-list" class="grid-dishes">
+        <div class="card skeleton" style="height: 180px;"></div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stat-grid" style="margin-bottom: 40px;">
+      <div class="stat-card">
+        <span class="stat-label">Total Orders Placed</span>
+        <span class="stat-val" id="stat-total-orders">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Active Ongoing</span>
+        <span class="stat-val" id="stat-active-orders" style="color: var(--primary);">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Completed Orders</span>
+        <span class="stat-val" id="stat-delivered-orders" style="color: var(--success);">0</span>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 1.35rem;">Order History</h2>
+        <a href="/customer/orders.html" class="btn btn-outline-primary btn-sm">See All Orders →</a>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Restaurant</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="recent-orders-tbody">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('CUSTOMER');
+      if (!user) return;
+      renderNavbar('dashboard');
+
+      document.getElementById('user-name').textContent = user.fullName || 'Foodie';
+
+      loadOrders();
+    });
+
+    async function loadOrders() {
+      const res = await apiRequest('/customer/me/orders');
+      if (!res.success) return;
+
+      const orders = res.data || [];
+      const active = orders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status));
+      const delivered = orders.filter(o => o.status === 'DELIVERED');
+
+      document.getElementById('stat-total-orders').textContent = orders.length;
+      document.getElementById('stat-active-orders').textContent = active.length;
+      document.getElementById('stat-delivered-orders').textContent = delivered.length;
+
+      // Render Active Orders
+      const activeList = document.getElementById('active-orders-list');
+      if (active.length === 0) {
+        activeList.innerHTML = `
+          <div style="grid-column: 1/-1; background: #FFF; border: 1px dashed var(--border); padding: 24px; border-radius: var(--radius-lg); text-align: center; color: var(--text-muted);">
+            No active orders in progress right now. Hungry? <a href="/customer/restaurants.html" style="color: var(--primary); font-weight: 600;">Browse restaurants now!</a>
+          </div>
+        `;
+      } else {
+        activeList.innerHTML = active.map(o => `
+          <div class="card" style="padding: 20px; background: #FFF; border-color: rgba(255,107,0,0.3); box-shadow: var(--shadow-md);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-weight: 700; font-size: 0.95rem;">${o.orderNumber}</span>
+              <span class="status-badge status-${o.status.toLowerCase()}">${o.status.replace(/_/g, ' ')}</span>
+            </div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: var(--dark);">${o.restaurantName}</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">${o.items.length} item(s) • Total: ₹${o.totalAmount}</div>
+            <a href="/customer/order-track.html?id=${o.id}" class="btn btn-primary btn-sm btn-full">
+              Live Map & Status Track 📍
+            </a>
+          </div>
+        `).join('');
+      }
+
+      // Render Table
+      const tbody = document.getElementById('recent-orders-tbody');
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No previous orders found.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = orders.slice(0, 5).map(o => `
+        <tr>
+          <td style="font-weight: 600;">${o.orderNumber}</td>
+          <td>${o.restaurantName}</td>
+          <td style="font-weight: 700;">₹${o.totalAmount}</td>
+          <td><span class="status-badge status-${o.status.toLowerCase()}">${o.status.replace(/_/g, ' ')}</span></td>
+          <td style="color: var(--text-muted); font-size: 0.85rem;">${new Date(o.createdAt).toLocaleDateString()}</td>
+          <td>
+            <a href="/customer/order-track.html?id=${o.id}" class="btn btn-outline-primary btn-sm">
+              Details
+            </a>
+          </td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

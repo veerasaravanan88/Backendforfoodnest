@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Dashboard — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div style="padding: 10px 12px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Restaurant Partner</div>
+        <div id="sidebar-restaurant-name" style="font-size: 1.15rem; font-weight: 800; color: var(--dark);">...</div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li><a href="/restaurant/dashboard.html" class="sidebar-link active">📊 Dashboard</a></li>
+        <li><a href="/restaurant/dishes.html" class="sidebar-link">🍲 Dishes & Menu</a></li>
+        <li><a href="/restaurant/orders.html" class="sidebar-link">📦 Orders Dispatch</a></li>
+        <li><a href="/restaurant/reports.html" class="sidebar-link">📈 Sales Reports</a></li>
+        <li><a href="/restaurant/profile.html" class="sidebar-link">⚙️ Kitchen Profile</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h1 style="font-size: 2rem;">Kitchen Command Center</h1>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Live order flow, revenues, and inventory metrics.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <a href="/restaurant/dishes.html" class="btn btn-primary btn-sm">+ Add New Dish</a>
+          <a href="/restaurant/orders.html" class="btn btn-outline btn-sm">View Orders 🛎️</a>
+        </div>
+      </div>
+
+      <!-- Live Counters -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-label">Total Revenue</span>
+          <span class="stat-val" id="stat-revenue" style="color: var(--primary);">₹0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Total Orders</span>
+          <span class="stat-val" id="stat-total-orders">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Active Preparing</span>
+          <span class="stat-val" id="stat-active" style="color: var(--warning);">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Dishes on Menu</span>
+          <span class="stat-val" id="stat-dishes">0</span>
+        </div>
+      </div>
+
+      <!-- Recent Orders Table -->
+      <div style="margin-top: 36px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="font-size: 1.3rem;">Recent Incoming Orders</h2>
+          <a href="/restaurant/orders.html" class="btn btn-outline-primary btn-sm">Full Dispatch View →</a>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Customer</th>
+                <th>Items Ordered</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="recent-orders-tbody">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading live orders...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('RESTAURANT');
+      if (!user) return;
+      renderNavbar('dashboard');
+
+      document.getElementById('sidebar-restaurant-name').textContent = user.fullName || 'My Restaurant';
+
+      loadDashboardStats();
+    });
+
+    async function loadDashboardStats() {
+      const res = await apiRequest('/restaurant/me/dashboard');
+      if (!res.success || !res.data) return;
+
+      const d = res.data;
+
+      // Animated counters
+      animateValue('stat-revenue', d.totalRevenue, '₹');
+      animateValue('stat-total-orders', d.totalOrders);
+      animateValue('stat-active', d.activeOrders);
+      animateValue('stat-dishes', d.totalDishes);
+
+      // Render recent orders
+      const tbody = document.getElementById('recent-orders-tbody');
+      if (!d.recentOrders || d.recentOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No orders received yet. Active dishes are live in the marketplace!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = d.recentOrders.map(o => {
+        const itemsStr = o.items.map(i => `${i.quantity}x ${i.dishName}`).join(', ');
+        return `
+          <tr>
+            <td style="font-weight: 700;">${o.orderNumber}</td>
+            <td>${o.customerName}<br><small style="color: var(--text-muted);">${o.customerPhone}</small></td>
+            <td style="font-size: 0.85rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${itemsStr}</td>
+            <td style="font-weight: 800; color: var(--dark);">₹${o.totalAmount}</td>
+            <td><span class="status-badge status-${o.status.toLowerCase()}">${o.status.replace(/_/g, ' ')}</span></td>
+            <td>
+              <a href="/restaurant/orders.html" class="btn btn-outline-primary btn-sm">
+                Manage
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function animateValue(id, end, prefix = '') {
+      const obj = document.getElementById(id);
+      if (!obj) return;
+      const numEnd = parseFloat(end) || 0;
+      let start = 0;
+      const duration = 800;
+      const stepTime = 20;
+      const steps = duration / stepTime;
+      const increment = numEnd / steps;
+
+      const timer = setInterval(() => {
+        start += increment;
+        if (start >= numEnd) {
+          clearInterval(timer);
+          obj.textContent = `${prefix}${numEnd.toLocaleString()}`;
+        } else {
+          obj.textContent = `${prefix}${Math.floor(start).toLocaleString()}`;
+        }
+      }, stepTime);
+    }
+  </script>
+</body>
+</html>

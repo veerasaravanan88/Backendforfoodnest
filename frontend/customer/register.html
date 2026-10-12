@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Customer Account — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body style="background: radial-gradient(circle at top right, #FFF3EB 0%, #FFFDF9 60%);">
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-sm" style="margin-top: 40px; margin-bottom: 60px;">
+    <div class="form-card">
+      <div style="text-align: center; margin-bottom: 28px;">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">🎉</div>
+        <h2 style="font-size: 1.8rem;">Create Your Account</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+          Join AdvanceFoodnest for seamless food ordering and live deliveries.
+        </p>
+      </div>
+
+      <form id="customer-register-form">
+        <div class="form-group">
+          <label class="form-label" for="fullName">Full Name</label>
+          <input type="text" id="fullName" class="form-input" placeholder="e.g. Maya Krishnan" required minlength="2">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone Number</label>
+            <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543212" required minlength="7">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password (min. 6 characters)</label>
+          <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="address">Delivery Address</label>
+          <textarea id="address" class="form-textarea" rows="3" placeholder="Apartment / Suite, Building, Street, City" required></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+          Create Customer Account
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
+        Already have an account? <a href="/customer/login.html" style="color: var(--primary); font-weight: 600;">Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (user && user.role === 'CUSTOMER') {
+        window.location.href = '/customer/dashboard.html';
+        return;
+      }
+      renderNavbar();
+
+      const form = document.getElementById('customer-register-form');
+      const submitBtn = document.getElementById('submit-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account...';
+
+        const payload = {
+          fullName: document.getElementById('fullName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          password: document.getElementById('password').value,
+          address: document.getElementById('address').value.trim()
+        };
+
+        const res = await apiRequest('/auth/customer/register', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          showToast('Account created! Logging you in...', 'success');
+          // Auto login
+          const loginRes = await apiRequest('/auth/customer/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: payload.email, password: payload.password })
+          });
+          if (loginRes.success) {
+            setTimeout(() => window.location.href = '/customer/dashboard.html', 500);
+          } else {
+            setTimeout(() => window.location.href = '/customer/login.html', 500);
+          }
+        } else {
+          showToast(res.message || 'Registration failed', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Create Customer Account';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <!-- Restaurant Hero Banner -->
+  <section id="restaurant-banner" style="background: #FFF; border-bottom: 1px solid var(--border); padding: 40px 0;">
+    <div class="container">
+      <div style="display: flex; gap: 32px; align-items: center; flex-wrap: wrap;">
+        <img id="rest-img" src="" alt="Restaurant" style="width: 140px; height: 140px; object-fit: cover; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <div>
+          <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+            <h1 id="rest-name" style="font-size: 2.2rem;">Loading Restaurant...</h1>
+            <span id="rest-rating" class="card-rating" style="position: static; box-shadow: none; border: 1px solid var(--border);">★ 4.8</span>
+          </div>
+          <p id="rest-cuisine" style="font-size: 1rem; color: var(--primary); font-weight: 600; margin-bottom: 6px;"></p>
+          <p id="rest-address" style="color: var(--text-muted); font-size: 0.92rem;"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dishes Menu Section -->
+  <div class="container" style="padding-top: 36px; padding-bottom: 90px;">
+    <!-- Category Tabs -->
+    <div class="category-strip" id="menu-categories" style="margin-bottom: 24px;">
+      <button class="category-chip active" data-cat="All">All Dishes</button>
+    </div>
+
+    <div class="grid-dishes" id="dishes-grid">
+      <div class="card skeleton" style="height: 280px;"></div>
+      <div class="card skeleton" style="height: 280px;"></div>
+      <div class="card skeleton" style="height: 280px;"></div>
+    </div>
+  </div>
+
+  <!-- Sticky Bottom Cart Bar -->
+  <div id="bottom-cart-bar" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 600px; background: var(--dark); color: #FFF; padding: 14px 24px; border-radius: var(--radius-full); box-shadow: var(--shadow-lg); display: none; align-items: center; justify-content: space-between; z-index: 90; animation: slideUp 0.3s ease;">
+    <div>
+      <span id="bottom-cart-count" style="font-weight: 700;">0 items</span> in your cart
+    </div>
+    <a href="/customer/cart.html" class="btn btn-primary btn-sm" style="border-radius: var(--radius-full);">
+      View Cart & Checkout →
+    </a>
+  </div>
+
+  <script type="module">
+    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest, addToCart, getCart, getCartTotalCount } from '/shared/js/api.js';
+
+    let currentRestaurant = null;
+    let menuDishes = [];
+    let selectedCategory = 'All';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkAuth();
+      renderNavbar('restaurants');
+
+      const params = new URLSearchParams(window.location.search);
+      const restId = params.get('id');
+
+      if (!restId) {
+        alert('No restaurant selected.');
+        window.location.href = '/customer/restaurants.html';
+        return;
+      }
+
+      await loadRestaurantData(restId);
+      updateBottomCartBar();
+
+      window.addEventListener('cart-updated', () => {
+        updateBottomCartBar();
+      });
+    });
+
+    async function loadRestaurantData(restId) {
+      // 1. Fetch restaurant info
+      const restRes = await apiRequest(`/restaurants/${restId}`);
+      if (restRes.success && restRes.data) {
+        currentRestaurant = restRes.data;
+        document.getElementById('rest-name').textContent = currentRestaurant.name;
+        document.getElementById('rest-cuisine').textContent = currentRestaurant.cuisineType;
+        document.getElementById('rest-address').textContent = currentRestaurant.address;
+        document.getElementById('rest-rating').textContent = `★ ${currentRestaurant.rating}`;
+        document.getElementById('rest-img').src = currentRestaurant.imageUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600';
+      }
+
+      // 2. Fetch dishes for ONLY this restaurant
+      const menuRes = await apiRequest(`/restaurants/${restId}/menu`);
+      if (menuRes.success && menuRes.data) {
+        menuDishes = menuRes.data;
+        renderCategoryTabs();
+        renderDishes();
+      } else {
+        document.getElementById('dishes-grid').innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">
+            No dishes available for this restaurant currently.
+          </div>
+        `;
+      }
+    }
+
+    function renderCategoryTabs() {
+      const categories = ['All', ...new Set(menuDishes.map(d => d.category))];
+      const strip = document.getElementById('menu-categories');
+      strip.innerHTML = categories.map(cat => `
+        <button class="category-chip ${cat === selectedCategory ? 'active' : ''}" data-cat="${cat}">
+          ${cat}
+        </button>
+      `).join('');
+
+      strip.querySelectorAll('.category-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          strip.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          selectedCategory = btn.dataset.cat;
+          renderDishes();
+        });
+      });
+    }
+
+    function renderDishes() {
+      let filtered = menuDishes;
+      if (selectedCategory !== 'All') {
+        filtered = filtered.filter(d => d.category === selectedCategory);
+      }
+
+      const grid = document.getElementById('dishes-grid');
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No items in this category.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(d => `
+        <div class="card">
+          <div class="card-img-wrap">
+            <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" alt="${d.name}" class="card-img">
+            <span class="card-badge">${d.category}</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">${d.name}</h3>
+            <p class="card-subtitle" style="font-size: 0.82rem; height: 38px; overflow: hidden; text-overflow: ellipsis;">
+              ${d.description || 'Deliciously prepared with top quality ingredients.'}
+            </p>
+            <div class="card-footer">
+              <span class="dish-price">₹${d.price}</span>
+              <button class="btn btn-primary btn-sm add-cart-btn" data-id="${d.id}">
+                Add to Cart 🛒
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.add-cart-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const dishId = parseInt(btn.dataset.id);
+          const dish = menuDishes.find(d => d.id === dishId);
+          if (dish && currentRestaurant) {
+            addToCart({
+              id: dish.id,
+              name: dish.name,
+              price: dish.price,
+              imageUrl: dish.imageUrl,
+              restaurantId: currentRestaurant.id,
+              restaurantName: currentRestaurant.name
+            }, 1);
+          }
+        });
+      });
+    }
+
+    function updateBottomCartBar() {
+      const bar = document.getElementById('bottom-cart-bar');
+      const countEl = document.getElementById('bottom-cart-count');
+      const total = getCartTotalCount();
+
+      if (total > 0) {
+        bar.style.display = 'flex';
+        countEl.textContent = `${total} item${total > 1 ? 's' : ''}`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

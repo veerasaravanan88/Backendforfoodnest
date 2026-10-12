@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-md" style="padding-top: 40px; padding-bottom: 70px;">
+    <div style="margin-bottom: 28px;">
+      <h1 style="font-size: 2.2rem;">Finalize Your Order</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">Confirm delivery details and payment.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: start;">
+      <!-- Left: Delivery Details Form -->
+      <div>
+        <div class="card" style="padding: 28px; background: #FFF; margin-bottom: 24px;">
+          <h3 style="font-size: 1.25rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>📍</span> Delivery Address
+          </h3>
+
+          <div class="form-group">
+            <label class="form-label" for="address">Full Delivery Address</label>
+            <textarea id="address" class="form-textarea" rows="3" placeholder="Building, Street, Landmark, City, Pincode" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="notes">Delivery / Cooking Instructions (Optional)</label>
+            <input type="text" id="notes" class="form-input" placeholder="e.g. Leave at front door, extra spicy please">
+          </div>
+        </div>
+
+        <div class="card" style="padding: 28px; background: #FFF;">
+          <h3 style="font-size: 1.25rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>💳</span> Payment Method
+          </h3>
+
+          <div style="border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; gap: 12px; background: var(--primary-light);">
+            <input type="radio" id="cod" name="paymentMethod" value="CASH_ON_DELIVERY" checked style="accent-color: var(--primary); width: 18px; height: 18px;">
+            <label for="cod" style="font-weight: 700; cursor: pointer; flex: 1;">
+              💵 Cash on Delivery (COD)
+              <div style="font-weight: 400; font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">Pay with cash or UPI scanner upon arrival.</div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Summary Review -->
+      <div class="card" style="padding: 28px; background: #FFF;">
+        <h3 style="font-size: 1.25rem; margin-bottom: 18px;">Order Details</h3>
+        <div id="checkout-restaurant-name" style="font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 14px;">...</div>
+
+        <div id="checkout-items-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 200px; overflow-y: auto;">
+          <!-- Items inserted here -->
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 16px; display: flex; flex-direction: column; gap: 12px; font-size: 0.92rem; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Subtotal</span>
+            <span id="co-subtotal" style="font-weight: 600;">₹0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Taxes & GST (5%)</span>
+            <span id="co-tax" style="font-weight: 600;">₹0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Delivery Fee</span>
+            <span id="co-delivery" style="font-weight: 600;">₹0.00</span>
+          </div>
+          <div style="border-top: 1px solid var(--border); padding-top: 12px; display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800;">
+            <span>Total Payable</span>
+            <span id="co-total" style="color: var(--primary);">₹0.00</span>
+          </div>
+        </div>
+
+        <button id="place-order-btn" class="btn btn-primary btn-full btn-lg">
+          Place Order Now 🚀
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { getCart, clearCart, apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    let validatedCartData = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('CUSTOMER');
+      if (!user) return;
+      renderNavbar('cart');
+
+      const cart = getCart();
+      if (!cart.items || cart.items.length === 0) {
+        showToast('Your cart is empty', 'error');
+        window.location.href = '/customer/cart.html';
+        return;
+      }
+
+      // Pre-fill address from customer profile
+      if (user.address) {
+        document.getElementById('address').value = user.address;
+      }
+
+      // Fetch server calculated prices
+      const calcRes = await apiRequest('/cart/calculate', {
+        method: 'POST',
+        body: JSON.stringify({ items: cart.items.map(i => ({ dishId: i.dishId, quantity: i.quantity })) })
+      });
+
+      if (!calcRes.success || !calcRes.data) {
+        showToast(calcRes.message || 'Error validating items', 'error');
+        window.location.href = '/customer/cart.html';
+        return;
+      }
+
+      validatedCartData = calcRes.data;
+      document.getElementById('checkout-restaurant-name').textContent = `From ${validatedCartData.restaurantName}`;
+      document.getElementById('co-subtotal').textContent = `₹${validatedCartData.subtotal}`;
+      document.getElementById('co-tax').textContent = `₹${validatedCartData.taxAmount}`;
+      document.getElementById('co-delivery').textContent = `₹${validatedCartData.deliveryFee}`;
+      document.getElementById('co-total').textContent = `₹${validatedCartData.totalAmount}`;
+
+      const itemsList = document.getElementById('checkout-items-list');
+      itemsList.innerHTML = validatedCartData.items.map(i => `
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+          <span>${i.quantity}x ${i.name}</span>
+          <span style="font-weight: 600;">₹${i.itemTotal}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('place-order-btn').addEventListener('click', placeOrder);
+    });
+
+    async function placeOrder() {
+      const address = document.getElementById('address').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+      const btn = document.getElementById('place-order-btn');
+
+      if (!address) {
+        showToast('Please enter your complete delivery address', 'error');
+        return;
+      }
+
+      const cart = getCart();
+      btn.disabled = true;
+      btn.textContent = 'Placing order...';
+
+      const orderPayload = {
+        items: cart.items.map(i => ({ dishId: i.dishId, quantity: i.quantity })),
+        deliveryAddress: address,
+        customerNotes: notes,
+        paymentMethod: 'CASH_ON_DELIVERY'
+      };
+
+      const res = await apiRequest('/orders', {
+        method: 'POST',
+        body: JSON.stringify(orderPayload)
+      });
+
+      if (res.success && res.data) {
+        clearCart();
+        showToast('Order placed successfully! Redirecting...', 'success');
+        setTimeout(() => {
+          window.location.href = `/customer/order-track.html?id=${res.data.id}`;
+        }, 600);
+      } else {
+        showToast(res.message || 'Failed to place order', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Place Order Now 🚀';
+      }
+    }
+  </script>
+</body>
+</html>

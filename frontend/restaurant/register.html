@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner With Us — Register Restaurant | AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body style="background: radial-gradient(circle at top right, #FFF3EB 0%, #FFFDF9 60%);">
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-sm" style="margin-top: 40px; margin-bottom: 60px;">
+    <div class="form-card">
+      <div style="text-align: center; margin-bottom: 28px;">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">🏪</div>
+        <h2 style="font-size: 1.8rem;">Register Your Restaurant</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+          Reach thousands of hungry foodies in your city with AdvanceFoodnest.
+        </p>
+      </div>
+
+      <form id="restaurant-register-form">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="name">Restaurant Name</label>
+            <input type="text" id="name" class="form-input" placeholder="e.g. Royal Tandoor" required minlength="2">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ownerName">Owner Name</label>
+            <input type="text" id="ownerName" class="form-input" placeholder="e.g. Sameer Khan" required minlength="2">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="email">Business Email</label>
+            <input type="email" id="email" class="form-input" placeholder="kitchen@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone Number</label>
+            <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543210" required minlength="7">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="cuisineType">Cuisine Style</label>
+            <input type="text" id="cuisineType" class="form-input" placeholder="e.g. Mughlai, Chinese, Continental" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="password">Password (min. 6 characters)</label>
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="imageUrl">Cover Image URL (Optional)</label>
+          <input type="url" id="imageUrl" class="form-input" placeholder="https://images.unsplash.com/...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="address">Full Restaurant Address</label>
+          <textarea id="address" class="form-textarea" rows="3" placeholder="Commercial Unit, Street, Neighborhood, City" required></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+          Register Restaurant
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
+        Already registered? <a href="/restaurant/login.html" style="color: var(--primary); font-weight: 600;">Sign in here</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await checkAuth();
+      if (user && user.role === 'RESTAURANT') {
+        window.location.href = '/restaurant/dashboard.html';
+        return;
+      }
+      renderNavbar();
+
+      const form = document.getElementById('restaurant-register-form');
+      const submitBtn = document.getElementById('submit-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Registering restaurant...';
+
+        const payload = {
+          name: document.getElementById('name').value.trim(),
+          ownerName: document.getElementById('ownerName').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          cuisineType: document.getElementById('cuisineType').value.trim(),
+          password: document.getElementById('password').value,
+          imageUrl: document.getElementById('imageUrl').value.trim() || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
+          address: document.getElementById('address').value.trim()
+        };
+
+        const res = await apiRequest('/auth/restaurant/register', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          showToast('Restaurant registered successfully! Logging you in...', 'success');
+          // Auto login
+          const loginRes = await apiRequest('/auth/restaurant/login', {
+            method: 'POST',
+            body: JSON.stringify({ email: payload.email, password: payload.password })
+          });
+          if (loginRes.success) {
+            setTimeout(() => window.location.href = '/restaurant/dashboard.html', 500);
+          } else {
+            setTimeout(() => window.location.href = '/restaurant/login.html', 500);
+          }
+        } else {
+          showToast(res.message || 'Registration failed', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Register Restaurant';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

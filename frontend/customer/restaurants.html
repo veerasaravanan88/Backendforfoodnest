@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore Restaurants — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container" style="padding-top: 36px; padding-bottom: 60px;">
+    <div style="margin-bottom: 28px;">
+      <h1 style="font-size: 2.2rem;">All Restaurants</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">Handcrafted meals prepared fresh by verified local culinary partners.</p>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 260px; position: relative;">
+        <input type="text" id="search-box" class="form-input" placeholder="Search by restaurant name...">
+      </div>
+      <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px;" id="filter-chips">
+        <button class="category-chip active" data-cuisine="All">All Cuisines</button>
+        <button class="category-chip" data-cuisine="Burgers">Burgers & Fast Food</button>
+        <button class="category-chip" data-cuisine="Biryani">Biryani & Mughlai</button>
+        <button class="category-chip" data-cuisine="South Indian">South Indian & Pure Veg</button>
+      </div>
+    </div>
+
+    <!-- Restaurants Grid -->
+    <div class="grid-restaurants" id="restaurants-grid">
+      <div class="card skeleton" style="height: 320px;"></div>
+      <div class="card skeleton" style="height: 320px;"></div>
+      <div class="card skeleton" style="height: 320px;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+
+    let allRestaurants = [];
+    let currentCuisine = 'All';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkAuth();
+      renderNavbar('restaurants');
+
+      // Check URL query parameters
+      const params = new URLSearchParams(window.location.search);
+      const searchParam = params.get('search');
+      const cuisineParam = params.get('cuisine');
+
+      if (searchParam) {
+        document.getElementById('search-box').value = searchParam;
+      }
+      if (cuisineParam) {
+        currentCuisine = cuisineParam;
+      }
+
+      setupEventListeners();
+      loadRestaurants();
+    });
+
+    function setupEventListeners() {
+      const searchBox = document.getElementById('search-box');
+      searchBox.addEventListener('input', () => filterAndRender());
+
+      document.querySelectorAll('#filter-chips .category-chip').forEach(btn => {
+        if (btn.dataset.cuisine.toLowerCase() === currentCuisine.toLowerCase()) {
+          document.querySelectorAll('#filter-chips .category-chip').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+        }
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#filter-chips .category-chip').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          currentCuisine = btn.dataset.cuisine;
+          filterAndRender();
+        });
+      });
+    }
+
+    async function loadRestaurants() {
+      const res = await apiRequest('/restaurants');
+      if (res.success && res.data) {
+        allRestaurants = res.data;
+        filterAndRender();
+      } else {
+        document.getElementById('restaurants-grid').innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">
+            Failed to load restaurants. Please check if the server is running.
+          </div>
+        `;
+      }
+    }
+
+    function filterAndRender() {
+      const searchVal = document.getElementById('search-box').value.trim().toLowerCase();
+      let filtered = allRestaurants;
+
+      if (currentCuisine && currentCuisine !== 'All') {
+        filtered = filtered.filter(r => r.cuisineType && r.cuisineType.toLowerCase().includes(currentCuisine.toLowerCase()));
+      }
+
+      if (searchVal) {
+        filtered = filtered.filter(r => 
+          r.name.toLowerCase().includes(searchVal) || 
+          (r.cuisineType && r.cuisineType.toLowerCase().includes(searchVal))
+        );
+      }
+
+      const grid = document.getElementById('restaurants-grid');
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 60px;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">🍽️</div>
+            <h3>No restaurants found matching your criteria.</h3>
+            <p style="font-size: 0.9rem; margin-top: 4px;">Try searching for a different name or clearing filters.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(r => `
+        <div class="card" onclick="window.location.href='/customer/restaurant-menu.html?id=${r.id}'" style="cursor: pointer;">
+          <div class="card-img-wrap">
+            <img src="${r.imageUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600'}" alt="${r.name}" class="card-img">
+            <span class="card-badge">${r.cuisineType}</span>
+            <span class="card-rating">★ ${r.rating}</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">${r.name}</h3>
+            <p class="card-subtitle">${r.address}</p>
+            <div class="card-footer">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">🕒 30-40 mins</span>
+              <span class="btn btn-primary btn-sm">View Menu</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

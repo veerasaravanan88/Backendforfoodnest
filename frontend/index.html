@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdvanceFoodnest — Premium Food Delivery Platform</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+      <div>
+        <div class="hero-pill">
+          <span>⚡</span> Superfast 30-min Hot Delivery
+        </div>
+        <h1 class="hero-title">
+          Delicious Food,<br>
+          Delivered <span>Hot & Fresh</span> to Your Doorstep.
+        </h1>
+        <p class="hero-subtitle">
+          Discover top-rated restaurants, handcrafted gourmet biryanis, crispy fried delights, and authentic comfort foods. Live tracking with automatic rider dispatch.
+        </p>
+
+        <form id="hero-search-form" class="hero-search-bar" onsubmit="event.preventDefault(); window.location.href='/customer/restaurants.html?search=' + encodeURIComponent(document.getElementById('search-input').value);">
+          <span style="font-size: 1.25rem; display: flex; align-items: center; padding-left: 8px;">🔍</span>
+          <input type="text" id="search-input" class="hero-search-input" placeholder="Search for restaurant, burger, biryani, or dish...">
+          <button type="submit" class="btn btn-primary">Find Food</button>
+        </form>
+
+        <div style="display: flex; gap: 24px; margin-top: 36px; align-items: center;">
+          <div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--dark);">500+</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Daily Deliveries</div>
+          </div>
+          <div style="width: 1px; height: 35px; background: var(--border);"></div>
+          <div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--dark);">4.9 ★</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Customer Rating</div>
+          </div>
+          <div style="width: 1px; height: 35px; background: var(--border);"></div>
+          <div>
+            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">100%</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Fresh & Hygienic</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-image-wrap">
+        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" alt="Gourmet Dining" class="hero-main-img">
+        <div class="floating-badge badge-top">
+          <span style="font-size: 1.5rem;">🔥</span>
+          <div>
+            <div style="font-weight: 700; font-size: 0.9rem;">Chicken 65 Special</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Trending Order #1</div>
+          </div>
+        </div>
+        <div class="floating-badge badge-bottom">
+          <span style="font-size: 1.5rem;">🛵</span>
+          <div>
+            <div style="font-weight: 700; font-size: 0.9rem;">Live GPS Tracking</div>
+            <div style="font-size: 0.78rem; color: var(--success); font-weight: 600;">Rider Dispatched</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Strip Section -->
+  <section style="padding: 40px 0; background: #FFF; border-bottom: 1px solid var(--border);">
+    <div class="container">
+      <h2 style="font-size: 1.4rem; margin-bottom: 16px;">Browse by Craving</h2>
+      <div class="category-strip" id="category-chips">
+        <div class="category-chip active" data-cat="All">✨ All Cuisines</div>
+        <div class="category-chip" data-cat="Burgers & Fast Food">🍔 Fast Food & Burgers</div>
+        <div class="category-chip" data-cat="Biryani & Mughlai">🍗 Royal Biryani</div>
+        <div class="category-chip" data-cat="South Indian & Pure Veg">🍛 South Indian Delights</div>
+        <div class="category-chip" data-cat="Starters">🍤 Crispy Starters</div>
+        <div class="category-chip" data-cat="Desserts">🍨 Sweet Desserts</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Restaurants Section -->
+  <section style="padding: 60px 0;">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px;">
+        <div>
+          <span class="hero-pill" style="margin-bottom: 8px;">Curated For You</span>
+          <h2 style="font-size: 2rem;">Featured Restaurants</h2>
+        </div>
+        <a href="/customer/restaurants.html" class="btn btn-outline-primary btn-sm">View All Restaurants →</a>
+      </div>
+
+      <div class="grid-restaurants" id="restaurants-grid">
+        <div class="card skeleton" style="height: 320px;"></div>
+        <div class="card skeleton" style="height: 320px;"></div>
+        <div class="card skeleton" style="height: 320px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Multi-Role Portals Section -->
+  <section style="padding: 60px 0; background: var(--gray-bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="container">
+      <div style="text-align: center; max-width: 600px; margin: 0 auto 40px;">
+        <span class="hero-pill">One Platform, Three Portals</span>
+        <h2 style="font-size: 2rem; margin-top: 6px;">Experience AdvanceFoodnest</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 8px;">
+          Seamless integration for hunger-driven customers, thriving restaurant owners, and punctual delivery partners.
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <!-- Customer Portal -->
+        <div class="card" style="padding: 28px; background: #FFF;">
+          <div style="font-size: 2.2rem; margin-bottom: 16px;">😋</div>
+          <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Order Food</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+            Browse multiple verified eateries, add items to your cart, enjoy server-validated pricing, and track your delivery live on an interactive map.
+          </p>
+          <div style="margin-top: auto; display: flex; gap: 10px;">
+            <a href="/customer/restaurants.html" class="btn btn-primary btn-sm btn-full">Explore Menus</a>
+          </div>
+        </div>
+
+        <!-- Restaurant Partner Portal -->
+        <div class="card" style="padding: 28px; background: #FFF;">
+          <div style="font-size: 2.2rem; margin-bottom: 16px;">👨‍🍳</div>
+          <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Restaurant Dashboard</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+            Register your kitchen, manage your exclusive dishes with strict data isolation, accept incoming orders, and mark them READY to auto-dispatch riders.
+          </p>
+          <div style="margin-top: auto; display: flex; gap: 10px;">
+            <a href="/restaurant/login.html" class="btn btn-dark btn-sm btn-full">Restaurant Portal</a>
+          </div>
+        </div>
+
+        <!-- Delivery Partner Portal -->
+        <div class="card" style="padding: 28px; background: #FFF;">
+          <div style="font-size: 2.2rem; margin-bottom: 16px;">🛵</div>
+          <h3 style="font-size: 1.3rem; margin-bottom: 8px;">Delivery Partner Hub</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+            Toggle your availability on or off, receive automatic order dispatches, broadcast permission-based live GPS coordinates, and deliver hot food.
+          </p>
+          <div style="margin-top: auto; display: flex; gap: 10px;">
+            <a href="/deliveryman/login.html" class="btn btn-outline-primary btn-sm btn-full">Rider Portal</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section style="padding: 70px 0; background: #FFF;">
+    <div class="container" style="text-align: center;">
+      <span class="hero-pill">Smooth Flow</span>
+      <h2 style="font-size: 2rem; margin-bottom: 40px;">How AdvanceFoodnest Works</h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px;">
+        <div>
+          <div style="width: 60px; height: 60px; background: var(--primary-light); color: var(--primary); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; margin: 0 auto 16px;">1</div>
+          <h3 style="font-size: 1.15rem; margin-bottom: 8px;">Select & Customize</h3>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">Browse rich restaurant menus and add your favorite dishes to your cart with instant price validation.</p>
+        </div>
+        <div>
+          <div style="width: 60px; height: 60px; background: var(--primary-light); color: var(--primary); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; margin: 0 auto 16px;">2</div>
+          <h3 style="font-size: 1.15rem; margin-bottom: 8px;">Kitchen Prepares</h3>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">The authenticated restaurant accepts and prepares the food fresh. When marked READY, our auto-dispatch system triggers.</p>
+        </div>
+        <div>
+          <div style="width: 60px; height: 60px; background: var(--primary-light); color: var(--primary); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; margin: 0 auto 16px;">3</div>
+          <h3 style="font-size: 1.15rem; margin-bottom: 8px;">Automated Dispatch</h3>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">An active delivery partner is selected and assigned with safe transactional locking.</p>
+        </div>
+        <div>
+          <div style="width: 60px; height: 60px; background: var(--primary-light); color: var(--primary); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; margin: 0 auto 16px;">4</div>
+          <h3 style="font-size: 1.15rem; margin-bottom: 8px;">Live GPS Tracking</h3>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">Track your rider on an interactive Leaflet map in real time until the food is handed over.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background: var(--dark); color: #FFF; padding: 60px 0 30px; margin-top: auto;">
+    <div class="container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 40px; margin-bottom: 40px;">
+        <div>
+          <div class="brand" style="color: #FFF; margin-bottom: 16px;">
+            <div class="brand-badge">🍲</div>
+            <span>Advance<span class="highlight">Foodnest</span></span>
+          </div>
+          <p style="color: #A1A1AA; font-size: 0.9rem; line-height: 1.6;">
+            Full-stack commercial-grade food delivery web application built with Java 21, Spring Boot, PostgreSQL, and modern Vanilla ES modules.
+          </p>
+        </div>
+        <div>
+          <h4 style="color: #FFF; font-size: 1rem; margin-bottom: 16px;">Portals</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: #A1A1AA;">
+            <li><a href="/customer/login.html" style="color: inherit;">Customer Login</a></li>
+            <li><a href="/restaurant/login.html" style="color: inherit;">Restaurant Partner</a></li>
+            <li><a href="/deliveryman/login.html" style="color: inherit;">Delivery Partner</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color: #FFF; font-size: 1rem; margin-bottom: 16px;">Top Cuisines</h4>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: #A1A1AA;">
+            <li><a href="/customer/restaurants.html?cuisine=Burgers" style="color: inherit;">Burgers & Fries</a></li>
+            <li><a href="/customer/restaurants.html?cuisine=Biryani" style="color: inherit;">Dum Biryani</a></li>
+            <li><a href="/customer/restaurants.html?cuisine=South Indian" style="color: inherit;">South Indian Dosas</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="color: #FFF; font-size: 1rem; margin-bottom: 16px;">Security & Features</h4>
+          <p style="color: #A1A1AA; font-size: 0.88rem; line-height: 1.6;">
+            Strict restaurant dish isolation, server-validated calculations, automatic rider assignment, and permission-based GPS tracking.
+          </p>
+        </div>
+      </div>
+      <div style="border-top: 1px solid var(--border-dark); padding-top: 24px; text-align: center; color: #71717A; font-size: 0.85rem;">
+        © 2026 AdvanceFoodnest. All rights reserved. Built with precision and care.
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkAuth();
+      renderNavbar('home');
+
+      // Load restaurants
+      loadFeaturedRestaurants();
+
+      // Category click handlers
+      document.querySelectorAll('.category-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const cat = chip.dataset.cat;
+          window.location.href = `/customer/restaurants.html?cuisine=${encodeURIComponent(cat)}`;
+        });
+      });
+    });
+
+    async function loadFeaturedRestaurants() {
+      const grid = document.getElementById('restaurants-grid');
+      const res = await apiRequest('/restaurants');
+
+      if (!res.success || !res.data || res.data.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No restaurants found. Please ensure backend has seeded data.</div>';
+        return;
+      }
+
+      grid.innerHTML = res.data.map(r => `
+        <div class="card" onclick="window.location.href='/customer/restaurant-menu.html?id=${r.id}'" style="cursor: pointer;">
+          <div class="card-img-wrap">
+            <img src="${r.imageUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600'}" alt="${r.name}" class="card-img">
+            <span class="card-badge">${r.cuisineType}</span>
+            <span class="card-rating">★ ${r.rating}</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">${r.name}</h3>
+            <p class="card-subtitle">${r.address}</p>
+            <div class="card-footer">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">🕒 30-40 mins</span>
+              <span class="btn btn-primary btn-sm">View Menu</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

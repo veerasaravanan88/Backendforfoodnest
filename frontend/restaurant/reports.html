@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales & Reports — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div style="padding: 10px 12px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Restaurant Partner</div>
+        <div id="sidebar-restaurant-name" style="font-size: 1.15rem; font-weight: 800; color: var(--dark);">...</div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li><a href="/restaurant/dashboard.html" class="sidebar-link">📊 Dashboard</a></li>
+        <li><a href="/restaurant/dishes.html" class="sidebar-link">🍲 Dishes & Menu</a></li>
+        <li><a href="/restaurant/orders.html" class="sidebar-link">📦 Orders Dispatch</a></li>
+        <li><a href="/restaurant/reports.html" class="sidebar-link active">📈 Sales Reports</a></li>
+        <li><a href="/restaurant/profile.html" class="sidebar-link">⚙️ Kitchen Profile</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <div style="margin-bottom: 28px;">
+        <h1 style="font-size: 2rem;">Kitchen Sales & Business Reports</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">All numbers derived exclusively from your authenticated restaurant database records.</p>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-label">Total Realized Revenue</span>
+          <span class="stat-val" id="rep-revenue" style="color: var(--primary);">₹0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Delivered Orders</span>
+          <span class="stat-val" id="rep-delivered" style="color: var(--success);">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Cancelled Orders</span>
+          <span class="stat-val" id="rep-cancelled" style="color: var(--danger);">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Live Active Dishes</span>
+          <span class="stat-val" id="rep-dishes">0</span>
+        </div>
+      </div>
+
+      <!-- 7-Day Revenue Trend Visualizer -->
+      <div class="card" style="padding: 28px; background: #FFF; margin-bottom: 32px;">
+        <h3 style="font-size: 1.25rem; margin-bottom: 8px;">7-Day Sales Trend</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Daily order counts and realized revenue over the past week.</p>
+
+        <div id="chart-bars-wrap" style="display: flex; justify-content: space-between; align-items: flex-end; height: 200px; padding: 20px 10px 0; border-bottom: 2px solid var(--border); gap: 12px;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Breakdown Table -->
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Orders Count</th>
+              <th>Total Revenue</th>
+            </tr>
+          </thead>
+          <tbody id="sales-tbody">
+            <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading reports...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('RESTAURANT');
+      if (!user) return;
+      renderNavbar('reports');
+
+      document.getElementById('sidebar-restaurant-name').textContent = user.fullName || 'My Restaurant';
+
+      loadReports();
+    });
+
+    async function loadReports() {
+      const res = await apiRequest('/restaurant/me/reports');
+      if (!res.success || !res.data) return;
+
+      const d = res.data;
+      document.getElementById('rep-revenue').textContent = `₹${d.totalRevenue}`;
+      document.getElementById('rep-delivered').textContent = d.deliveredOrders;
+      document.getElementById('rep-cancelled').textContent = d.cancelledOrders;
+      document.getElementById('rep-dishes').textContent = `${d.availableDishes} / ${d.totalDishes}`;
+
+      // Daily Breakdown Table
+      const tbody = document.getElementById('sales-tbody');
+      if (d.dailySales && d.dailySales.length > 0) {
+        tbody.innerHTML = d.dailySales.map(day => `
+          <tr>
+            <td style="font-weight: 600;">${day.date}</td>
+            <td>${day.orders} order${day.orders !== 1 ? 's' : ''}</td>
+            <td style="font-weight: 700; color: var(--primary);">₹${day.revenue}</td>
+          </tr>
+        `).join('');
+
+        // Render Trend Bars
+        const maxRev = Math.max(...d.dailySales.map(s => parseFloat(s.revenue) || 0), 100);
+        const barsWrap = document.getElementById('chart-bars-wrap');
+        barsWrap.innerHTML = d.dailySales.map(day => {
+          const rev = parseFloat(day.revenue) || 0;
+          const heightPct = Math.max(10, Math.round((rev / maxRev) * 100));
+
+          return `
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: var(--dark);">₹${rev}</span>
+              <div style="width: 100%; max-width: 44px; height: ${heightPct}%; background: linear-gradient(180deg, var(--primary) 0%, #FF8526 100%); border-radius: 6px 6px 0 0; transition: height 0.4s ease;"></div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">${day.date}</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">No daily sales recorded yet.</td></tr>';
+      }
+    }
+  </script>
+</body>
+</html>

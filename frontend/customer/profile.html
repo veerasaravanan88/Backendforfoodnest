@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-sm" style="padding-top: 40px; padding-bottom: 70px;">
+    <div style="margin-bottom: 28px;">
+      <h1 style="font-size: 2.2rem;">Account Profile</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">Manage your contact details and default delivery address.</p>
+    </div>
+
+    <div class="form-card">
+      <form id="profile-form">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address (Read-only)</label>
+          <input type="email" id="email" class="form-input" disabled style="background: var(--gray-bg); cursor: not-allowed;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="fullName">Full Name</label>
+          <input type="text" id="fullName" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input type="tel" id="phone" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="address">Default Delivery Address</label>
+          <textarea id="address" class="form-textarea" rows="3" required></textarea>
+        </div>
+
+        <button type="submit" id="save-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+          Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('CUSTOMER');
+      if (!user) return;
+      renderNavbar();
+
+      loadProfile();
+
+      document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        const payload = {
+          fullName: document.getElementById('fullName').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          address: document.getElementById('address').value.trim()
+        };
+
+        const res = await apiRequest('/customer/me', {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.success) {
+          showToast('Profile updated successfully!', 'success');
+        } else {
+          showToast(res.message || 'Error updating profile', 'error');
+        }
+
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Changes';
+      });
+    });
+
+    async function loadProfile() {
+      const res = await apiRequest('/customer/me');
+      if (res.success && res.data) {
+        const p = res.data;
+        document.getElementById('email').value = p.email;
+        document.getElementById('fullName').value = p.fullName;
+        document.getElementById('phone').value = p.phone || '';
+        document.getElementById('address').value = p.address || '';
+      }
+    }
+  </script>
+</body>
+</html>

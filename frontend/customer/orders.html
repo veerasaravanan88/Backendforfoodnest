@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container" style="padding-top: 40px; padding-bottom: 70px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 style="font-size: 2.2rem;">Order History</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">Track ongoing orders or view past culinary purchases.</p>
+      </div>
+      <a href="/customer/restaurants.html" class="btn btn-primary btn-sm">Explore Restaurants 🍽️</a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Restaurant</th>
+            <th>Items</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="orders-tbody">
+          <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">Loading your orders...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await requireAuth('CUSTOMER');
+      if (!user) return;
+      renderNavbar('orders');
+
+      loadOrders();
+    });
+
+    async function loadOrders() {
+      const res = await apiRequest('/customer/me/orders');
+      const tbody = document.getElementById('orders-tbody');
+
+      if (!res.success || !res.data || res.data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 60px;">
+              <div style="font-size: 2.5rem; margin-bottom: 8px;">📦</div>
+              <h3 style="font-size: 1.2rem; color: var(--dark);">No orders found</h3>
+              <p style="font-size: 0.88rem; margin-top: 4px; margin-bottom: 16px;">Treat yourself to hot fresh delicacies today!</p>
+              <a href="/customer/restaurants.html" class="btn btn-primary btn-sm">Browse Eateries</a>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = res.data.map(o => {
+        const itemsSummary = o.items.map(i => `${i.quantity}x ${i.dishName}`).join(', ');
+        const canCancel = o.status === 'PLACED';
+
+        return `
+          <tr>
+            <td style="font-weight: 700; color: var(--dark);">${o.orderNumber}</td>
+            <td style="font-weight: 600;">${o.restaurantName}</td>
+            <td style="font-size: 0.85rem; color: var(--text-muted); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${itemsSummary}">
+              ${itemsSummary}
+            </td>
+            <td style="font-weight: 800; color: var(--dark);">₹${o.totalAmount}</td>
+            <td>
+              <span class="status-badge status-${o.status.toLowerCase()}">${o.status.replace(/_/g, ' ')}</span>
+            </td>
+            <td style="color: var(--text-muted); font-size: 0.85rem;">${new Date(o.createdAt).toLocaleString()}</td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <a href="/customer/order-track.html?id=${o.id}" class="btn btn-primary btn-sm">
+                  Track 📍
+                </a>
+                ${canCancel ? `
+                  <button class="btn btn-outline btn-sm cancel-order-btn" data-id="${o.id}" style="color: var(--danger); border-color: rgba(239,68,68,0.3);">
+                    Cancel
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('.cancel-order-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const orderId = btn.dataset.id;
+          if (confirm('Are you sure you want to cancel this order?')) {
+            const cancelRes = await apiRequest(`/orders/${orderId}/cancel`, { method: 'POST' });
+            if (cancelRes.success) {
+              showToast('Order cancelled successfully', 'info');
+              loadOrders();
+            } else {
+              showToast(cancelRes.message || 'Unable to cancel order', 'error');
+            }
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>

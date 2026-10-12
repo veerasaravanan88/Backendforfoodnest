@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rider Dispatch Hub — AdvanceFoodnest</title>
+  <link rel="stylesheet" href="/shared/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container container-md" style="padding-top: 36px; padding-bottom: 70px;">
+    <!-- Top Rider Header & Availability Toggle -->
+    <div class="card" style="padding: 24px; background: #FFF; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 50px; height: 50px; border-radius: var(--radius-full); background: var(--primary); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.6rem;">
+          🛵
+        </div>
+        <div>
+          <h1 id="rider-name-title" style="font-size: 1.5rem;">Delivery Partner</h1>
+          <div id="rider-status-desc" style="font-size: 0.88rem; color: var(--text-muted);">Active Rider Fleet</div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 0.9rem; font-weight: 600;">Status:</span>
+        <button id="toggle-availability-btn" class="btn btn-success btn-sm">
+          ● Online (Receiving Orders)
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Delivery Card -->
+    <div id="active-delivery-section" style="margin-bottom: 28px;">
+      <h2 style="font-size: 1.35rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>📦</span> Current Assigned Delivery
+      </h2>
+
+      <div id="active-card-container">
+        <div class="card skeleton" style="height: 240px;"></div>
+      </div>
+    </div>
+
+    <!-- GPS Sharing Control Box -->
+    <div class="card" style="padding: 24px; background: #FFF; margin-bottom: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <h3 style="font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+            <span>📍</span> Permission-Based GPS Broadcast
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+            Enables the customer to view your real-time approach on their live map.
+          </p>
+        </div>
+        <button id="toggle-gps-btn" class="btn btn-outline-primary btn-sm">
+          Start GPS Sharing
+        </button>
+      </div>
+
+      <div id="gps-status-panel" style="margin-top: 14px; padding: 12px 16px; background: var(--gray-bg); border-radius: var(--radius-md); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+        <span id="gps-status-text" style="color: var(--text-muted);">GPS Broadcast: Inactive</span>
+        <span id="gps-coords-text" style="font-weight: 600;">Coordinates: --</span>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Link -->
+    <div style="display: flex; justify-content: flex-end;">
+      <a href="/deliveryman/deliveries.html" class="btn btn-outline btn-sm">View Delivery History & Assignments →</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
+    import { apiRequest } from '/shared/js/api.js';
+    import { showToast } from '/shared/js/toast.js';
+
+    let currentRider = null;
+    let activeOrder = null;
+    let watchId = null;
+    let isSharingLocation = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      currentRider = await requireAuth('DELIVERY_MAN');
+      if (!currentRider) return;
+      renderNavbar('dashboard');
+
+      document.getElementById('rider-name-title').textContent = currentRider.fullName || 'Rider';
+
+      setupAvailabilityToggle();
+      setupGpsBroadcast();
+      loadActiveDelivery();
+
+      // Poll for newly assigned deliveries every 5 seconds
+      setInterval(loadActiveDelivery, 5000);
+    });
+
+    async function setupAvailabilityToggle() {
+      const btn = document.getElementById('toggle-availability-btn');
+      
+      // Fetch profile
+      const profRes = await apiRequest('/deliveryman/me');
+      let isAvailable = true;
+      if (profRes.success && profRes.data) {
+        isAvailable = profRes.data.isAvailable;
+        updateAvailabilityBtn(isAvailable);
+      }
+
+      btn.addEventListener('click', async () => {
+        isAvailable = !isAvailable;
+        btn.disabled = true;
+
+        const res = await apiRequest('/deliveryman/me/availability', {
+          method: 'POST',
+          body: JSON.stringify({ isAvailable })
+        });
+
+        if (res.success) {
+          updateAvailabilityBtn(isAvailable);
+          showToast(`Availability set to ${isAvailable ? 'Online' : 'Offline'}`, 'info');
+        } else {
+          isAvailable = !isAvailable;
+        }
+        btn.disabled = false;
+      });
+    }
+
+    function updateAvailabilityBtn(isAvailable) {
+      const btn = document.getElementById('toggle-availability-btn');
+      if (isAvailable) {
+        btn.textContent = '● Online (Ready to Deliver)';
+        btn.className = 'btn btn-success btn-sm';
+      } else {
+        btn.textContent = '○ Offline (On Break)';
+        btn.className = 'btn btn-outline btn-sm';
+      }
+    }
+
+    async function loadActiveDelivery() {
+      const res = await apiRequest('/deliveryman/me/active');
+      const container = document.getElementById('active-card-container');
+
+      if (!res.success || !res.data) {
+        activeOrder = null;
+        container.innerHTML = `
+          <div style="background: #FFF; border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: 50px 20px; text-align: center; color: var(--text-muted);">
+            <div style="font-size: 2.8rem; margin-bottom: 8px;">🛵</div>
+            <h3 style="font-size: 1.25rem; color: var(--dark);">No Active Deliveries Right Now</h3>
+            <p style="font-size: 0.9rem; margin-top: 4px;">
+              Keep your status <strong>Online</strong>. When a restaurant marks an order <strong>READY</strong>, our automatic dispatch system will instantly assign it to you!
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      activeOrder = res.data;
+      const o = activeOrder;
+      const itemsStr = o.items.map(i => `${i.quantity}x ${i.dishName}`).join(', ');
+
+      let actionBtn = '';
+      if (o.status === 'READY' || o.status === 'PREPARING' || o.status === 'ACCEPTED') {
+        actionBtn = `
+          <button class="btn btn-primary btn-full btn-lg update-active-status-btn" data-status="PICKED_UP">
+            Confirm Order Pickup from Kitchen 📦
+          </button>
+        `;
+      } else if (o.status === 'PICKED_UP') {
+        actionBtn = `
+          <button class="btn btn-primary btn-full btn-lg update-active-status-btn" data-status="OUT_FOR_DELIVERY">
+            Start Riding (Out for Delivery) 🛵
+          </button>
+        `;
+      } else if (o.status === 'OUT_FOR_DELIVERY') {
+        actionBtn = `
+          <button class="btn btn-success btn-full btn-lg update-active-status-btn" data-status="DELIVERED">
+            Mark Delivered & Collect COD Payment (₹${o.totalAmount}) ✓
+          </button>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="card" style="padding: 28px; background: #FFF; border-color: rgba(255,107,0,0.3); box-shadow: var(--shadow-md);">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 16px;">
+            <div>
+              <span style="font-weight: 800; font-size: 1.2rem;">${o.orderNumber}</span>
+              <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 8px;">• Total COD: ₹${o.totalAmount}</span>
+            </div>
+            <span class="status-badge status-${o.status.toLowerCase()}">${o.status.replace(/_/g, ' ')}</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="background: var(--gray-bg); padding: 14px 18px; border-radius: var(--radius-md);">
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">1. PICKUP RESTAURANT</div>
+              <div style="font-weight: 700; font-size: 1.05rem; color: var(--dark);">${o.restaurantName}</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">📍 ${o.restaurantAddress}</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">📞 ${o.restaurantPhone}</div>
+            </div>
+
+            <div style="background: var(--gray-bg); padding: 14px 18px; border-radius: var(--radius-md);">
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted);">2. DROP-OFF CUSTOMER</div>
+              <div style="font-weight: 700; font-size: 1.05rem; color: var(--dark);">${o.customerName}</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">📍 ${o.deliveryAddress}</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">📞 ${o.customerPhone}</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 24px; font-size: 0.88rem; color: var(--text-muted);">
+            <strong>Items:</strong> ${itemsStr}
+          </div>
+
+          <div>
+            ${actionBtn}
+          </div>
+        </div>
+      `;
+
+      container.querySelectorAll('.update-active-status-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const newStatus = btn.dataset.status;
+          btn.disabled = true;
+          btn.textContent = 'Updating status...';
+
+          const res = await apiRequest(`/deliveryman/me/deliveries/${o.id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: newStatus })
+          });
+
+          if (res.success) {
+            showToast(`Order marked ${newStatus}!`, 'success');
+            loadActiveDelivery();
+          } else {
+            showToast(res.message || 'Status transition failed', 'error');
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+
+    function setupGpsBroadcast() {
+      const toggleBtn = document.getElementById('toggle-gps-btn');
+      const statusText = document.getElementById('gps-status-text');
+      const coordsText = document.getElementById('gps-coords-text');
+
+      toggleBtn.addEventListener('click', () => {
+        if (!isSharingLocation) {
+          if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+          }
+
+          statusText.textContent = 'Requesting browser GPS permission...';
+
+          watchId = navigator.geolocation.watchPosition(
+            async (pos) => {
+              isSharingLocation = true;
+              toggleBtn.textContent = 'Stop GPS Sharing ⏹️';
+              toggleBtn.className = 'btn btn-danger btn-sm';
+              statusText.textContent = '● Live GPS Broadcasting Active';
+              statusText.style.color = 'var(--success)';
+
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              coordsText.textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+
+              // Transmit to backend
+              await apiRequest('/deliveryman/me/location', {
+                method: 'POST',
+                body: JSON.stringify({
+                  latitude: lat,
+                  longitude: lng,
+                  heading: pos.coords.heading || 0
+                })
+              });
+            },
+            (err) => {
+              console.warn('Geolocation error:', err);
+              showToast('Location permission denied or unavailable: ' + err.message, 'error');
+              stopLocationSharing();
+            },
+            { enableHighAccuracy: true, maximumAge: 3000 }
+          );
+        } else {
+          stopLocationSharing();
+        }
+      });
+
+      function stopLocationSharing() {
+        if (watchId !== null) {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+        }
+        isSharingLocation = false;
+        toggleBtn.textContent = 'Start GPS Sharing';
+        toggleBtn.className = 'btn btn-outline-primary btn-sm';
+        statusText.textContent = 'GPS Broadcast: Inactive';
+        statusText.style.color = 'var(--text-muted)';
+        coordsText.textContent = 'Coordinates: --';
+        showToast('Location sharing stopped', 'info');
+      }
+    }
+  </script>
+</body>
+</html>
