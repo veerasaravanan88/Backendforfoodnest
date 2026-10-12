@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body>
 
@@ -86,9 +86,9 @@
   </div>
 
   <script type="module">
-    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
-    import { getCart, clearCart, apiRequest } from '/shared/js/api.js';
-    import { showToast } from '/shared/js/toast.js';
+    import { requireAuth, renderNavbar } from '../shared/js/auth.js';
+    import { getCart, clearCart, apiRequest } from '../shared/js/api.js';
+    import { showToast } from '../shared/js/toast.js';
 
     let validatedCartData = null;
 
@@ -100,7 +100,7 @@
       const cart = getCart();
       if (!cart.items || cart.items.length === 0) {
         showToast('Your cart is empty', 'error');
-        window.location.href = '/customer/cart.html';
+        window.location.href = './cart.html';
         return;
       }
 
@@ -117,7 +117,7 @@
 
       if (!calcRes.success || !calcRes.data) {
         showToast(calcRes.message || 'Error validating items', 'error');
-        window.location.href = '/customer/cart.html';
+        window.location.href = './cart.html';
         return;
       }
 

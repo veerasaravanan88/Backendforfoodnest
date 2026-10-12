@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Deliveries History — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body>
 
@@ -16,7 +16,7 @@
         <h1 style="font-size: 2rem;">My Deliveries History</h1>
         <p style="color: var(--text-muted); font-size: 0.95rem;">Track all completed deliveries and assignments.</p>
       </div>
-      <a href="/deliveryman/dashboard.html" class="btn btn-primary btn-sm">← Back to Dispatch Hub</a>
+      <a href="./dashboard.html" class="btn btn-primary btn-sm">← Back to Dispatch Hub</a>
     </div>
 
     <div class="table-wrap">
@@ -37,8 +37,8 @@
   </div>
 
   <script type="module">
-    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
+    import { requireAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await requireAuth('DELIVERY_MAN');

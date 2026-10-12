@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AdvanceFoodnest — Premium Food Delivery Platform</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="./shared/css/style.css">
 </head>
 <body>
 
@@ -25,7 +25,7 @@
           Discover top-rated restaurants, handcrafted gourmet biryanis, crispy fried delights, and authentic comfort foods. Live tracking with automatic rider dispatch.
         </p>
 
-        <form id="hero-search-form" class="hero-search-bar" onsubmit="event.preventDefault(); window.location.href='/customer/restaurants.html?search=' + encodeURIComponent(document.getElementById('search-input').value);">
+        <form id="hero-search-form" class="hero-search-bar" onsubmit="event.preventDefault(); window.location.href='./customer/restaurants.html?search=' + encodeURIComponent(document.getElementById('search-input').value);">
           <span style="font-size: 1.25rem; display: flex; align-items: center; padding-left: 8px;">🔍</span>
           <input type="text" id="search-input" class="hero-search-input" placeholder="Search for restaurant, burger, biryani, or dish...">
           <button type="submit" class="btn btn-primary">Find Food</button>
@@ -228,8 +228,8 @@
   </footer>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
+    import { checkAuth, renderNavbar, getBaseUrl } from './shared/js/auth.js';
+    import { apiRequest } from './shared/js/api.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       await checkAuth();
@@ -242,7 +242,7 @@
       document.querySelectorAll('.category-chip').forEach(chip => {
         chip.addEventListener('click', () => {
           const cat = chip.dataset.cat;
-          window.location.href = `/customer/restaurants.html?cuisine=${encodeURIComponent(cat)}`;
+          window.location.href = `${getBaseUrl()}customer/restaurants.html?cuisine=${encodeURIComponent(cat)}`;
         });
       });
     });
@@ -256,8 +256,9 @@
         return;
       }
 
+      const base = getBaseUrl();
       grid.innerHTML = res.data.map(r => `
-        <div class="card" onclick="window.location.href='/customer/restaurant-menu.html?id=${r.id}'" style="cursor: pointer;">
+        <div class="card" onclick="window.location.href='${base}customer/restaurant-menu.html?id=${r.id}'" style="cursor: pointer;">
           <div class="card-img-wrap">
             <img src="${r.imageUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600'}" alt="${r.name}" class="card-img">
             <span class="card-badge">${r.cuisineType}</span>

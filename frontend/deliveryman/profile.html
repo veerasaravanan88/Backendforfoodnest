@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rider Profile — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body>
 
@@ -39,15 +39,15 @@
         </div>
 
         <div style="margin-top: 24px; text-align: center;">
-          <a href="/deliveryman/dashboard.html" class="btn btn-primary btn-full">Return to Rider Hub</a>
+          <a href="./dashboard.html" class="btn btn-primary btn-full">Return to Rider Hub</a>
         </div>
       </form>
     </div>
   </div>
 
   <script type="module">
-    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
+    import { requireAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await requireAuth('DELIVERY_MAN');

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rider Dispatch Hub — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body>
 
@@ -66,14 +66,14 @@
 
     <!-- Quick Navigation Link -->
     <div style="display: flex; justify-content: flex-end;">
-      <a href="/deliveryman/deliveries.html" class="btn btn-outline btn-sm">View Delivery History & Assignments →</a>
+      <a href="./deliveries.html" class="btn btn-outline btn-sm">View Delivery History & Assignments →</a>
     </div>
   </div>
 
   <script type="module">
-    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
-    import { showToast } from '/shared/js/toast.js';
+    import { requireAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
+    import { showToast } from '../shared/js/toast.js';
 
     let currentRider = null;
     let activeOrder = null;

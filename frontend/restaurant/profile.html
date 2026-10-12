@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kitchen Profile — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body>
 
@@ -19,11 +19,11 @@
       </div>
 
       <ul class="sidebar-menu">
-        <li><a href="/restaurant/dashboard.html" class="sidebar-link">📊 Dashboard</a></li>
-        <li><a href="/restaurant/dishes.html" class="sidebar-link">🍲 Dishes & Menu</a></li>
-        <li><a href="/restaurant/orders.html" class="sidebar-link">📦 Orders Dispatch</a></li>
-        <li><a href="/restaurant/reports.html" class="sidebar-link">📈 Sales Reports</a></li>
-        <li><a href="/restaurant/profile.html" class="sidebar-link active">⚙️ Kitchen Profile</a></li>
+        <li><a href="./dashboard.html" class="sidebar-link">📊 Dashboard</a></li>
+        <li><a href="./dishes.html" class="sidebar-link">🍲 Dishes & Menu</a></li>
+        <li><a href="./orders.html" class="sidebar-link">📦 Orders Dispatch</a></li>
+        <li><a href="./reports.html" class="sidebar-link">📈 Sales Reports</a></li>
+        <li><a href="./profile.html" class="sidebar-link active">⚙️ Kitchen Profile</a></li>
       </ul>
     </aside>
 
@@ -84,9 +84,9 @@
   </div>
 
   <script type="module">
-    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
-    import { showToast } from '/shared/js/toast.js';
+    import { requireAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
+    import { showToast } from '../shared/js/toast.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await requireAuth('RESTAURANT');

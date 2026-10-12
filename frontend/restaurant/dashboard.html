@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kitchen Dashboard — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body>
 
@@ -19,11 +19,11 @@
       </div>
 
       <ul class="sidebar-menu">
-        <li><a href="/restaurant/dashboard.html" class="sidebar-link active">📊 Dashboard</a></li>
-        <li><a href="/restaurant/dishes.html" class="sidebar-link">🍲 Dishes & Menu</a></li>
-        <li><a href="/restaurant/orders.html" class="sidebar-link">📦 Orders Dispatch</a></li>
-        <li><a href="/restaurant/reports.html" class="sidebar-link">📈 Sales Reports</a></li>
-        <li><a href="/restaurant/profile.html" class="sidebar-link">⚙️ Kitchen Profile</a></li>
+        <li><a href="./dashboard.html" class="sidebar-link active">📊 Dashboard</a></li>
+        <li><a href="./dishes.html" class="sidebar-link">🍲 Dishes & Menu</a></li>
+        <li><a href="./orders.html" class="sidebar-link">📦 Orders Dispatch</a></li>
+        <li><a href="./reports.html" class="sidebar-link">📈 Sales Reports</a></li>
+        <li><a href="./profile.html" class="sidebar-link">⚙️ Kitchen Profile</a></li>
       </ul>
     </aside>
 
@@ -35,8 +35,8 @@
           <p style="color: var(--text-muted); font-size: 0.95rem;">Live order flow, revenues, and inventory metrics.</p>
         </div>
         <div style="display: flex; gap: 10px;">
-          <a href="/restaurant/dishes.html" class="btn btn-primary btn-sm">+ Add New Dish</a>
-          <a href="/restaurant/orders.html" class="btn btn-outline btn-sm">View Orders 🛎️</a>
+          <a href="./dishes.html" class="btn btn-primary btn-sm">+ Add New Dish</a>
+          <a href="./orders.html" class="btn btn-outline btn-sm">View Orders 🛎️</a>
         </div>
       </div>
 
@@ -64,7 +64,7 @@
       <div style="margin-top: 36px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <h2 style="font-size: 1.3rem;">Recent Incoming Orders</h2>
-          <a href="/restaurant/orders.html" class="btn btn-outline-primary btn-sm">Full Dispatch View →</a>
+          <a href="./orders.html" class="btn btn-outline-primary btn-sm">Full Dispatch View →</a>
         </div>
 
         <div class="table-wrap">
@@ -89,8 +89,8 @@
   </div>
 
   <script type="module">
-    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
+    import { requireAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await requireAuth('RESTAURANT');
@@ -131,7 +131,7 @@
             <td style="font-weight: 800; color: var(--dark);">₹${o.totalAmount}</td>
             <td><span class="status-badge status-${o.status.toLowerCase()}">${o.status.replace(/_/g, ' ')}</span></td>
             <td>
-              <a href="/restaurant/orders.html" class="btn btn-outline-primary btn-sm">
+              <a href="./orders.html" class="btn btn-outline-primary btn-sm">
                 Manage
               </a>
             </td>

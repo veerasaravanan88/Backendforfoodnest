@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Partner With Us — Register Restaurant | AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body style="background: radial-gradient(circle at top right, #FFF3EB 0%, #FFFDF9 60%);">
 
@@ -70,20 +70,20 @@
       </form>
 
       <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        Already registered? <a href="/restaurant/login.html" style="color: var(--primary); font-weight: 600;">Sign in here</a>
+        Already registered? <a href="./login.html" style="color: var(--primary); font-weight: 600;">Sign in here</a>
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
-    import { showToast } from '/shared/js/toast.js';
+    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
+    import { showToast } from '../shared/js/toast.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await checkAuth();
       if (user && user.role === 'RESTAURANT') {
-        window.location.href = '/restaurant/dashboard.html';
+        window.location.href = './dashboard.html';
         return;
       }
       renderNavbar();
@@ -120,9 +120,9 @@
             body: JSON.stringify({ email: payload.email, password: payload.password })
           });
           if (loginRes.success) {
-            setTimeout(() => window.location.href = '/restaurant/dashboard.html', 500);
+            setTimeout(() => window.location.href = './dashboard.html', 500);
           } else {
-            setTimeout(() => window.location.href = '/restaurant/login.html', 500);
+            setTimeout(() => window.location.href = './login.html', 500);
           }
         } else {
           showToast(res.message || 'Registration failed', 'error');

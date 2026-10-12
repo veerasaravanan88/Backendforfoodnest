@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Order Tracking — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <!-- Leaflet JS -->
@@ -21,7 +21,7 @@
         <span class="hero-pill" style="margin-bottom: 6px;">Live Status</span>
         <h1 style="font-size: 2rem;">Track Order <span id="track-order-number" style="color: var(--primary);">...</span></h1>
       </div>
-      <a href="/customer/orders.html" class="btn btn-outline btn-sm">← Back to Orders</a>
+      <a href="./orders.html" class="btn btn-outline btn-sm">← Back to Orders</a>
     </div>
 
     <!-- Animated Status Timeline -->
@@ -121,8 +121,8 @@
   </div>
 
   <script type="module">
-    import { requireAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
+    import { requireAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
 
     const ORDER_STEPS = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
@@ -141,7 +141,7 @@
 
       if (!orderId) {
         alert('No order specified.');
-        window.location.href = '/customer/orders.html';
+        window.location.href = './orders.html';
         return;
       }
 

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Cart — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body>
 
@@ -71,14 +71,14 @@
       <div style="font-size: 4rem; margin-bottom: 16px;">🛒</div>
       <h2 style="font-size: 1.8rem; margin-bottom: 8px;">Your Cart is Empty</h2>
       <p style="color: var(--text-muted); margin-bottom: 24px;">Looks like you haven't added any culinary treats yet.</p>
-      <a href="/customer/restaurants.html" class="btn btn-primary btn-lg">Explore Top Restaurants</a>
+      <a href="./restaurants.html" class="btn btn-primary btn-lg">Explore Top Restaurants</a>
     </div>
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
-    import { getCart, clearCart, updateCartQuantity, apiRequest } from '/shared/js/api.js';
-    import { showToast } from '/shared/js/toast.js';
+    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
+    import { getCart, clearCart, updateCartQuantity, apiRequest } from '../shared/js/api.js';
+    import { showToast } from '../shared/js/toast.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       await checkAuth();
@@ -97,7 +97,7 @@
           showToast('Your cart is empty', 'error');
           return;
         }
-        window.location.href = '/customer/checkout.html';
+        window.location.href = './checkout.html';
       });
 
       renderCartView();

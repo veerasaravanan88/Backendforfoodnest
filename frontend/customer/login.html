@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customer Login — AdvanceFoodnest</title>
-  <link rel="stylesheet" href="/shared/css/style.css">
+  <link rel="stylesheet" href="../shared/css/style.css">
 </head>
 <body style="background: radial-gradient(circle at top right, #FFF3EB 0%, #FFFDF9 60%);">
 
@@ -42,26 +42,26 @@
       </form>
 
       <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        Don't have an account? <a href="/customer/register.html" style="color: var(--primary); font-weight: 600;">Sign up here</a>
+        Don't have an account? <a href="./register.html" style="color: var(--primary); font-weight: 600;">Sign up here</a>
       </div>
 
       <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 0.85rem;">
         Are you a partner?
-        <a href="/restaurant/login.html" style="font-weight: 600; color: var(--dark); margin-left: 6px;">Restaurant Login</a> |
-        <a href="/deliveryman/login.html" style="font-weight: 600; color: var(--dark); margin-left: 6px;">Rider Login</a>
+        <a href="../restaurant/login.html" style="font-weight: 600; color: var(--dark); margin-left: 6px;">Restaurant Login</a> |
+        <a href="../deliveryman/login.html" style="font-weight: 600; color: var(--dark); margin-left: 6px;">Rider Login</a>
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '/shared/js/auth.js';
-    import { apiRequest } from '/shared/js/api.js';
-    import { showToast } from '/shared/js/toast.js';
+    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest } from '../shared/js/api.js';
+    import { showToast } from '../shared/js/toast.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await checkAuth();
       if (user && user.role === 'CUSTOMER') {
-        window.location.href = '/customer/dashboard.html';
+        window.location.href = './dashboard.html';
         return;
       }
       renderNavbar();
@@ -85,7 +85,7 @@
         if (res.success) {
           showToast('Signed in successfully!', 'success');
           setTimeout(() => {
-            window.location.href = '/customer/dashboard.html';
+            window.location.href = './dashboard.html';
           }, 400);
         } else {
           showToast(res.message || 'Login failed', 'error');

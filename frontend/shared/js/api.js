@@ -1,7 +1,15 @@
 // API & Client Helper for AdvanceFoodnest
 import { showToast } from './toast.js';
 
-const API_BASE = window.location.port === '8080' ? '/api' : 'http://localhost:8080/api';
+export function getApiBase() {
+  if (window.location.port === '8080') {
+    return '/api';
+  }
+  const hostname = window.location.hostname || 'localhost';
+  return `http://${hostname}:8080/api`;
+}
+
+export const API_BASE = getApiBase();
 
 function getCookie(name) {
   const value = `; ${document.cookie}`;
@@ -85,7 +93,11 @@ export async function apiRequest(endpoint, options = {}) {
     return { success: true, status: response.status, data: data.data !== undefined ? data.data : data, message: data.message };
   } catch (err) {
     console.error('Network/API Error:', err);
-    return { success: false, status: 0, message: 'Unable to connect to server. Ensure backend is running.' };
+    return {
+      success: false,
+      status: 0,
+      message: 'Cannot connect to AdvanceFoodnest backend. Ensure Spring Boot is running on port 8080.'
+    };
   }
 }
 
