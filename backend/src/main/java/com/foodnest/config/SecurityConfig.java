@@ -123,7 +123,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:[*]",
-            "http://127.0.0.1:[*]"
+            "http://127.0.0.1:[*]",
+            "https://*.railway.app",
+            "https://*.up.railway.app",
+            "*"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(

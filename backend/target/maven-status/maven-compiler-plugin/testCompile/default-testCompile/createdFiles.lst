@@ -1,5 +1,0 @@
-com\foodnest\AuthServiceTest.class
-com\foodnest\DeliveryAssignmentServiceTest.class
-com\foodnest\OrderStatusStateMachineTest.class
-com\foodnest\CartCalculationTest.class
-com\foodnest\RestaurantIsolationTest.class
