@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["jdk21_headless", "maven"]
+
+[phases.build]
+cmds = ["chmod +x ./mvnw", "./mvnw clean package -DskipTests -B"]
+
+[start]
+cmd = "java -Djava.security.egd=file:/dev/./urandom -jar target/*.jar"
