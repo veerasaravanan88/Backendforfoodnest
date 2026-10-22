@@ -127,6 +127,8 @@ public class AuthService {
             if (req.getOwnerName() != null && !req.getOwnerName().isBlank()) restaurant.setOwnerName(req.getOwnerName().trim());
             if (req.getPhone() != null && !req.getPhone().isBlank()) restaurant.setPhone(req.getPhone().trim());
             if (req.getAddress() != null && !req.getAddress().isBlank()) restaurant.setAddress(req.getAddress().trim());
+            if (req.getLatitude() != null) restaurant.setLatitude(req.getLatitude());
+            if (req.getLongitude() != null) restaurant.setLongitude(req.getLongitude());
             if (req.getCuisineType() != null && !req.getCuisineType().isBlank()) restaurant.setCuisineType(req.getCuisineType().trim());
             if (req.getImageUrl() != null && !req.getImageUrl().isBlank()) restaurant.setImageUrl(req.getImageUrl().trim());
             restaurant.setPasswordHash(passwordEncoder.encode(req.getPassword()));
@@ -139,6 +141,8 @@ public class AuthService {
             restaurant.setPhone(req.getPhone().trim());
             restaurant.setPasswordHash(passwordEncoder.encode(req.getPassword()));
             restaurant.setAddress(req.getAddress());
+            restaurant.setLatitude(req.getLatitude());
+            restaurant.setLongitude(req.getLongitude());
             restaurant.setCuisineType(req.getCuisineType() != null ? req.getCuisineType() : "Multi-Cuisine");
             restaurant.setImageUrl(req.getImageUrl() != null && !req.getImageUrl().isBlank() ? req.getImageUrl() : "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800");
             restaurant.setAccountStatus("ACTIVE");

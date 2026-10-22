@@ -18,6 +18,8 @@ public class OrderDto {
     private String restaurantName;
     private String restaurantAddress;
     private String restaurantPhone;
+    private Double restaurantLatitude;
+    private Double restaurantLongitude;
     private OrderStatus status;
     private String deliveryAddress;
     private String customerNotes;
@@ -49,6 +51,8 @@ public class OrderDto {
             dto.setRestaurantName(order.getRestaurant().getName());
             dto.setRestaurantAddress(order.getRestaurant().getAddress());
             dto.setRestaurantPhone(order.getRestaurant().getPhone());
+            dto.setRestaurantLatitude(order.getRestaurant().getLatitude());
+            dto.setRestaurantLongitude(order.getRestaurant().getLongitude());
         }
         dto.setStatus(order.getStatus());
         dto.setDeliveryAddress(order.getDeliveryAddress());
@@ -139,6 +143,22 @@ public class OrderDto {
 
     public void setRestaurantPhone(String restaurantPhone) {
         this.restaurantPhone = restaurantPhone;
+    }
+
+    public Double getRestaurantLatitude() {
+        return restaurantLatitude;
+    }
+
+    public void setRestaurantLatitude(Double restaurantLatitude) {
+        this.restaurantLatitude = restaurantLatitude;
+    }
+
+    public Double getRestaurantLongitude() {
+        return restaurantLongitude;
+    }
+
+    public void setRestaurantLongitude(Double restaurantLongitude) {
+        this.restaurantLongitude = restaurantLongitude;
     }
 
     public OrderStatus getStatus() {

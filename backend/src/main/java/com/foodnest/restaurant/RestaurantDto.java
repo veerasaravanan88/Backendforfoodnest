@@ -13,6 +13,8 @@ public class RestaurantDto {
     private String cuisineType;
     private String imageUrl;
     private BigDecimal rating;
+    private Double latitude;
+    private Double longitude;
     private String accountStatus;
     private LocalDateTime createdAt;
 
@@ -30,6 +32,8 @@ public class RestaurantDto {
         dto.setCuisineType(restaurant.getCuisineType());
         dto.setImageUrl(restaurant.getImageUrl());
         dto.setRating(restaurant.getRating());
+        dto.setLatitude(restaurant.getLatitude());
+        dto.setLongitude(restaurant.getLongitude());
         dto.setAccountStatus(restaurant.getAccountStatus());
         dto.setCreatedAt(restaurant.getCreatedAt());
         return dto;
@@ -105,6 +109,22 @@ public class RestaurantDto {
 
     public void setRating(BigDecimal rating) {
         this.rating = rating;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public String getAccountStatus() {

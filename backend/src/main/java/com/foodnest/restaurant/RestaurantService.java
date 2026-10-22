@@ -53,6 +53,12 @@ public class RestaurantService {
         restaurant.setOwnerName(req.getOwnerName());
         restaurant.setPhone(req.getPhone());
         restaurant.setAddress(req.getAddress());
+        if (req.getLatitude() != null) {
+            restaurant.setLatitude(req.getLatitude());
+        }
+        if (req.getLongitude() != null) {
+            restaurant.setLongitude(req.getLongitude());
+        }
         if (req.getCuisineType() != null) {
             restaurant.setCuisineType(req.getCuisineType());
         }
