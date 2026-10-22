@@ -19,6 +19,6 @@ public interface DeliveryManRepository extends JpaRepository<DeliveryMan, Long> 
     List<DeliveryMan> findByIsAvailableTrueAndAccountStatus(String accountStatus);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT d FROM DeliveryMan d WHERE d.isAvailable = true AND d.accountStatus = :accountStatus ORDER BY d.id ASC")
+    @Query("SELECT d FROM DeliveryMan d WHERE d.isAvailable = true AND d.accountStatus = :accountStatus")
     List<DeliveryMan> findAvailableRidersForAssignmentLocked(String accountStatus);
 }

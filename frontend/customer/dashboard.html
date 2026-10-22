@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -118,7 +118,7 @@
               <span class="status-badge status-${o.status.toLowerCase()}">${o.status.replace(/_/g, ' ')}</span>
             </div>
             <div style="font-size: 1.1rem; font-weight: 700; color: var(--dark);">${o.restaurantName}</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">${o.items.length} item(s) • Total: ₹${o.totalAmount}</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">${Array.isArray(o.items) ? o.items.length : 1} item(s) • Total: ₹${o.totalAmount}</div>
             <a href="./order-track.html?id=${o.id}" class="btn btn-primary btn-sm btn-full">
               Live Map & Status Track 📍
             </a>

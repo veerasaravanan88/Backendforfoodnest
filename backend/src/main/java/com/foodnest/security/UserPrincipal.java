@@ -29,6 +29,10 @@ public class UserPrincipal implements UserDetails {
         return id;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     public UserRole getRole() {
         return role;
     }

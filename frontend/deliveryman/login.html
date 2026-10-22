@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,82 +11,164 @@
   <div id="navbar-container"></div>
 
   <div class="container container-sm" style="margin-top: 50px; margin-bottom: 60px;">
-    <div class="form-card">
-      <div style="text-align: center; margin-bottom: 28px;">
-        <div style="font-size: 2.2rem; margin-bottom: 8px;">🛵</div>
-        <h2 style="font-size: 1.8rem;">Delivery Partner Sign In</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+    <div class="form-card" style="box-shadow: var(--shadow-lg); border: 1px solid rgba(255,107,0,0.15);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 2.4rem; margin-bottom: 8px;">🛵</div>
+        <h2 style="font-size: 1.8rem; font-weight: 800;">Delivery Partner Hub</h2>
+        <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 4px;">
           Access your dispatch hub, toggle availability, and share live location.
         </p>
       </div>
 
-      <div style="background: var(--primary-light); border: 1px solid rgba(255,107,0,0.2); padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 24px; font-size: 0.85rem; color: var(--dark);">
-        <strong>Demo Rider Account:</strong><br>
-        Email: <code>rider1@foodnest.com</code> | Password: <code>password123</code>
+      <!-- Live Auth / Status Banner -->
+      <div id="auth-alert" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4;"></div>
+
+      <!-- Quick 1-Click Demo Rider Login -->
+      <div style="background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary);">
+            ⚡ 1-Click Demo Rider Login
+          </span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Pre-configured rider account</span>
+        </div>
+        <button type="button" id="demo-rider-btn" class="btn btn-outline btn-sm btn-full" style="background: #FFF; border-color: #FED7AA; font-weight: 700; color: var(--dark); display: flex; justify-content: space-between; align-items: center; padding: 10px 14px;">
+          <span>🛵 Vikram (rider1@foodnest.com) — Ready to Dispatch</span>
+          <span style="font-size: 0.75rem; color: var(--primary); font-weight: 600;">Fill & Sign In &rarr;</span>
+        </button>
       </div>
 
-      <form id="rider-login-form">
+      <form id="rider-login-form" onsubmit="event.preventDefault(); return false;">
         <div class="form-group">
-          <label class="form-label" for="email">Rider Email</label>
-          <input type="email" id="email" class="form-input" placeholder="e.g. rider1@foodnest.com" required value="rider1@foodnest.com">
+          <label class="form-label" for="email">Rider Email Address</label>
+          <input type="email" id="email" class="form-input" placeholder="e.g. rider@example.com" required autocomplete="email">
         </div>
 
         <div class="form-group">
           <label class="form-label" for="password">Password</label>
-          <input type="password" id="password" class="form-input" placeholder="••••••••" required value="password123">
+          <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
         </div>
 
-        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px; font-weight: 700;">
           Log In as Delivery Partner
         </button>
       </form>
 
       <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        Want to deliver with us? <a href="./register.html" style="color: var(--primary); font-weight: 600;">Join as Rider</a>
+        Want to deliver with us? <a href="./register.html" style="color: var(--primary); font-weight: 700;">Register as Rider &rarr;</a>
+      </div>
+
+      <div style="text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--text-muted);">
+        Looking for consumer ordering? <a href="../customer/login.html" style="color: var(--dark); font-weight: 600;">Customer Login</a> |
+        <a href="../restaurant/login.html" style="color: var(--dark); font-weight: 600;">Restaurant Login</a>
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
+    import { checkAuth, saveAuthSession, renderNavbar } from '../shared/js/auth.js';
     import { apiRequest } from '../shared/js/api.js';
     import { showToast } from '../shared/js/toast.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      if (user && user.role === 'DELIVERY_MAN') {
-        window.location.href = './dashboard.html';
+    function setAlert(message, type = 'error') {
+      const alert = document.getElementById('auth-alert');
+      if (!alert) return;
+      if (!message) {
+        alert.style.display = 'none';
         return;
       }
-      renderNavbar();
+      alert.style.display = 'block';
+      if (type === 'error') {
+        alert.style.background = '#FEE2E2';
+        alert.style.border = '1px solid #FCA5A5';
+        alert.style.color = '#991B1B';
+      } else if (type === 'success') {
+        alert.style.background = '#DCFCE7';
+        alert.style.border = '1px solid #86EFAC';
+        alert.style.color = '#166534';
+      } else {
+        alert.style.background = '#E0F2FE';
+        alert.style.border = '1px solid #BAE6FD';
+        alert.style.color = '#075985';
+      }
+      alert.innerHTML = message;
+    }
 
-      const form = document.getElementById('rider-login-form');
-      const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('rider-login-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Logging in...';
+    // Check for role-based access denial query param
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'rider_required') {
+      setAlert('⚠️ <strong>Access Denied:</strong> This section is for <strong>DELIVERY PARTNER</strong> accounts only. Please sign in with your rider credentials below.', 'error');
+    }
 
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+    async function doLogin(email, password) {
+      if (!email || !password) {
+        setAlert('Please enter your rider email and password.', 'error');
+        return;
+      }
 
+      setAlert('', '');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in to Rider Hub...';
+
+      try {
         const res = await apiRequest('/auth/deliveryman/login', {
           method: 'POST',
+          role: 'DELIVERY_MAN',
           body: JSON.stringify({ email, password })
         });
 
         if (res.success) {
-          showToast('Signed in successfully as Delivery Partner!', 'success');
+          saveAuthSession(res.data, res.data?.token, 'DELIVERY_MAN');
+          setAlert('✅ Signed in successfully! Redirecting to Rider Hub...', 'success');
+          showToast(`Welcome back, ${res.data?.fullName || 'Rider'}!`, 'success');
           setTimeout(() => {
             window.location.href = './dashboard.html';
-          }, 400);
+          }, 300);
         } else {
-          showToast(res.message || 'Login failed', 'error');
+          const err = res.message || 'Login failed. Please check credentials.';
+          setAlert(`❌ ${err}`, 'error');
+          showToast(err, 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Log In as Delivery Partner';
         }
-      });
+      } catch (err) {
+        setAlert('❌ Cannot reach backend server. Please verify your connection.', 'error');
+        showToast('Backend connection failed', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Log In as Delivery Partner';
+      }
+    }
+
+    // Attach listeners SYNCHRONOUSLY
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      doLogin(email, password);
+    });
+
+    document.getElementById('demo-rider-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      emailInput.value = 'rider1@foodnest.com';
+      passwordInput.value = 'password123';
+      doLogin('rider1@foodnest.com', 'password123');
+    });
+
+    // Render navbar & background check specifically for DELIVERY_MAN session
+    renderNavbar();
+    checkAuth('DELIVERY_MAN').then(user => {
+      if (user && user.role === 'DELIVERY_MAN') {
+        if (!urlParams.get('error')) {
+          setAlert(`You are already signed in as rider <strong>${user.fullName || user.email}</strong>. <a href="./dashboard.html" style="text-decoration:underline; font-weight:700;">Go to Rider Hub &rarr;</a>`, 'info');
+        }
+      }
+    }).catch(err => {
+      console.debug('Background checkAuth bypassed:', err);
     });
   </script>
 </body>

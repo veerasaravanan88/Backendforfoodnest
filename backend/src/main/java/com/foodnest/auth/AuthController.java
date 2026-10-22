@@ -20,40 +20,45 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final com.foodnest.security.TokenAuthService tokenAuthService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, com.foodnest.security.TokenAuthService tokenAuthService) {
         this.authService = authService;
+        this.tokenAuthService = tokenAuthService;
     }
 
     @PostMapping("/customer/register")
-    public ResponseEntity<ApiResponse<UserSummaryResponse>> registerCustomer(@Valid @RequestBody CustomerRegisterRequest request) {
-        UserSummaryResponse response = authService.registerCustomer(request);
+    public ResponseEntity<ApiResponse<UserSummaryResponse>> registerCustomer(@Valid @RequestBody CustomerRegisterRequest request,
+                                                                             HttpServletRequest httpRequest) {
+        UserSummaryResponse response = authService.registerCustomer(request, httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Customer registered successfully", response));
     }
 
     @PostMapping("/customer/login")
     public ResponseEntity<ApiResponse<UserSummaryResponse>> loginCustomer(@Valid @RequestBody LoginRequest request,
-                                                                         HttpServletRequest httpRequest) {
+                                                                          HttpServletRequest httpRequest) {
         UserSummaryResponse response = authService.login(UserRole.CUSTOMER, request.getEmail(), request.getPassword(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Logged in successfully as Customer", response));
     }
 
     @PostMapping("/restaurant/register")
-    public ResponseEntity<ApiResponse<UserSummaryResponse>> registerRestaurant(@Valid @RequestBody RestaurantRegisterRequest request) {
-        UserSummaryResponse response = authService.registerRestaurant(request);
+    public ResponseEntity<ApiResponse<UserSummaryResponse>> registerRestaurant(@Valid @RequestBody RestaurantRegisterRequest request,
+                                                                               HttpServletRequest httpRequest) {
+        UserSummaryResponse response = authService.registerRestaurant(request, httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Restaurant registered successfully", response));
     }
 
     @PostMapping("/restaurant/login")
     public ResponseEntity<ApiResponse<UserSummaryResponse>> loginRestaurant(@Valid @RequestBody LoginRequest request,
-                                                                           HttpServletRequest httpRequest) {
+                                                                            HttpServletRequest httpRequest) {
         UserSummaryResponse response = authService.login(UserRole.RESTAURANT, request.getEmail(), request.getPassword(), httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Logged in successfully as Restaurant Partner", response));
     }
 
     @PostMapping("/deliveryman/register")
-    public ResponseEntity<ApiResponse<UserSummaryResponse>> registerDeliveryMan(@Valid @RequestBody DeliveryManRegisterRequest request) {
-        UserSummaryResponse response = authService.registerDeliveryMan(request);
+    public ResponseEntity<ApiResponse<UserSummaryResponse>> registerDeliveryMan(@Valid @RequestBody DeliveryManRegisterRequest request,
+                                                                                HttpServletRequest httpRequest) {
+        UserSummaryResponse response = authService.registerDeliveryMan(request, httpRequest);
         return ResponseEntity.ok(ApiResponse.success("Delivery partner registered successfully", response));
     }
 
@@ -66,20 +71,31 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
+        String token = com.foodnest.security.TokenAuthenticationFilter.resolveToken(request);
+        if (token != null) {
+            tokenAuthService.removeToken(token);
+        } else {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
         }
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully", null));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserSummaryResponse>> getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
+    public ResponseEntity<ApiResponse<UserSummaryResponse>> getCurrentUser(
+            @AuthenticationPrincipal UserPrincipal principal,
+            HttpServletRequest request) {
         if (principal == null) {
             return ResponseEntity.status(401).body(ApiResponse.error("Not authenticated"));
         }
         UserSummaryResponse response = authService.getAuthenticatedUser(principal);
+        String token = com.foodnest.security.TokenAuthenticationFilter.resolveToken(request);
+        if (token != null) {
+            response.setToken(token);
+        }
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

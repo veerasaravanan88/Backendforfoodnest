@@ -43,17 +43,43 @@ public class TrackingService {
         DeliveryMan rider = deliveryManRepository.findById(deliveryManId)
                 .orElseThrow(() -> new ResourceNotFoundException("Delivery partner not found with id: " + deliveryManId));
 
+        // Always update the delivery partner's real-time GPS coordinates and active heartbeat
+        rider.setLatitude(req.getLatitude());
+        rider.setLongitude(req.getLongitude());
+        rider.setLastActiveAt(LocalDateTime.now());
+        deliveryManRepository.save(rider);
+
         // Look for active assignments: ASSIGNED, ACCEPTED, PICKED_UP
-        DeliveryAssignment assignment = assignmentRepository
+        Optional<DeliveryAssignment> assignmentOpt = assignmentRepository
                 .findFirstByDeliveryManIdAndStatusInOrderByAssignedAtDesc(
                         deliveryManId,
                         Arrays.asList(AssignmentStatus.ASSIGNED, AssignmentStatus.ACCEPTED, AssignmentStatus.PICKED_UP)
-                )
-                .orElseThrow(() -> new BadRequestException("No active delivery assignment currently in progress to track."));
+                );
 
+        if (assignmentOpt.isEmpty()) {
+            LocationResponse standalone = new LocationResponse();
+            standalone.setDeliveryManId(rider.getId());
+            standalone.setDeliveryManName(rider.getFullName());
+            standalone.setLatitude(req.getLatitude());
+            standalone.setLongitude(req.getLongitude());
+            standalone.setHeading(req.getHeading());
+            standalone.setUpdatedAt(LocalDateTime.now());
+            standalone.setIsLiveTrackingActive(true);
+            return standalone;
+        }
+
+        DeliveryAssignment assignment = assignmentOpt.get();
         Order order = assignment.getOrder();
         if (order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.CANCELLED) {
-            throw new BadRequestException("Order is already finished. Location tracking has terminated.");
+            LocationResponse standalone = new LocationResponse();
+            standalone.setDeliveryManId(rider.getId());
+            standalone.setDeliveryManName(rider.getFullName());
+            standalone.setLatitude(req.getLatitude());
+            standalone.setLongitude(req.getLongitude());
+            standalone.setHeading(req.getHeading());
+            standalone.setUpdatedAt(LocalDateTime.now());
+            standalone.setIsLiveTrackingActive(false);
+            return standalone;
         }
 
         DeliveryLocation loc = new DeliveryLocation();

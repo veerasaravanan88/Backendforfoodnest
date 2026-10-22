@@ -1,39 +1,370 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Menu — AdvanceFoodnest</title>
   <link rel="stylesheet" href="../shared/css/style.css">
+  <style>
+    /* Premium Food Menu Styles & Micro-Animations */
+    .menu-hero-card {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF9 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      position: relative;
+      overflow: hidden;
+    }
+    .menu-hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 260px;
+      height: 100%;
+      background: radial-gradient(circle at top right, rgba(255, 107, 0, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .dish-card-active {
+      border: 2px solid var(--primary) !important;
+      background: #FFFDF9 !important;
+      box-shadow: 0 8px 24px rgba(255, 107, 0, 0.2) !important;
+      transform: translateY(-4px);
+    }
+
+    .multi-select-active-card {
+      border: 2px solid #10B981 !important;
+      background: #F0FDF4 !important;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.22) !important;
+      transform: translateY(-4px);
+    }
+
+    .menu-qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(135deg, var(--primary) 0%, #FF8526 100%);
+      color: #FFF;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(255, 107, 0, 0.35);
+      transition: transform 0.15s ease;
+    }
+    .menu-qty-stepper:active {
+      transform: scale(0.96);
+    }
+
+    .menu-stepper-btn {
+      background: none;
+      border: none;
+      color: #FFF;
+      font-size: 1.2rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background 0.15s ease, transform 0.1s ease;
+      user-select: none;
+    }
+    .menu-stepper-btn:hover {
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .menu-stepper-btn:active {
+      transform: scale(0.85);
+    }
+
+    .menu-stepper-qty {
+      padding: 0 6px;
+      min-width: 26px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 800;
+      animation: qtyBump 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .in-cart-indicator {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--primary);
+      color: #FFF;
+      font-weight: 800;
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      animation: popIn 0.3s ease;
+    }
+
+    .multi-select-checkbox-wrap {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 3;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-md);
+      padding: 5px 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .multi-select-checkbox-wrap input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .diet-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+      background: #FFF;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .diet-filter-btn:hover {
+      border-color: #A1A1AA;
+      background: #F4F4F5;
+    }
+    .diet-filter-btn.active {
+      background: var(--dark);
+      color: #FFF;
+      border-color: var(--dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .menu-search-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #FFF;
+      padding: 10px 18px 10px 38px;
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .menu-search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Staggered card animation */
+    .stagger-card {
+      animation: cardEntrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    }
+
+    /* Sticky Bottom Bar Glowing Button */
+    .bottom-checkout-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, #FF8526 100%);
+      color: #FFF;
+      border: none;
+      border-radius: var(--radius-full);
+      padding: 10px 22px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255, 107, 0, 0.45);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .bottom-checkout-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(255, 107, 0, 0.6);
+    }
+    .bottom-checkout-btn:hover span.arrow {
+      transform: translateX(4px);
+    }
+    .bottom-checkout-btn span.arrow {
+      transition: transform 0.2s ease;
+    }
+  </style>
 </head>
 <body>
 
   <div id="navbar-container"></div>
 
-  <!-- Restaurant Hero Banner -->
-  <section id="restaurant-banner" style="background: #FFF; border-bottom: 1px solid var(--border); padding: 40px 0;">
+  <!-- Breadcrumbs & Restaurant Hero Header -->
+  <section style="padding: 24px 0 32px; background: radial-gradient(circle at top right, #FFF6EE 0%, rgba(255,253,249,0) 60%);">
     <div class="container">
-      <div style="display: flex; gap: 32px; align-items: center; flex-wrap: wrap;">
-        <img id="rest-img" src="" alt="Restaurant" style="width: 140px; height: 140px; object-fit: cover; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-        <div>
-          <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
-            <h1 id="rest-name" style="font-size: 2.2rem;">Loading Restaurant...</h1>
-            <span id="rest-rating" class="card-rating" style="position: static; box-shadow: none; border: 1px solid var(--border);">★ 4.8</span>
+      <!-- Breadcrumb Navigation -->
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+        <a href="../index.html" style="color: var(--text-muted); text-decoration: none;">Home</a>
+        <span>/</span>
+        <a href="./restaurants.html" style="color: var(--text-muted); text-decoration: none;">Restaurants</a>
+        <span>/</span>
+        <strong style="color: var(--dark);" id="bc-name">Menu</strong>
+      </div>
+
+      <!-- Main Restaurant Card -->
+      <div class="menu-hero-card">
+        <div style="display: flex; gap: 28px; align-items: center; flex-wrap: wrap;">
+          <div style="position: relative;">
+            <img id="rest-img" src="" alt="Restaurant" style="width: 130px; height: 130px; object-fit: cover; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+            <div style="position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); background: #10B981; color: #FFF; font-size: 0.72rem; font-weight: 800; padding: 2px 10px; border-radius: var(--radius-full); white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 4px;">
+              <span style="width: 6px; height: 6px; background: #FFF; border-radius: 50%; animation: liveIndicator 2s infinite;"></span>
+              Open Now
+            </div>
           </div>
-          <p id="rest-cuisine" style="font-size: 1rem; color: var(--primary); font-weight: 600; margin-bottom: 6px;"></p>
-          <p id="rest-address" style="color: var(--text-muted); font-size: 0.92rem;"></p>
+
+          <div style="flex: 1; min-width: 280px;">
+            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 6px; flex-wrap: wrap;">
+              <h1 id="rest-name" style="font-size: 2.1rem; letter-spacing: -0.5px;">Loading Restaurant...</h1>
+              <span id="rest-rating" class="card-rating" style="position: static; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid var(--border); font-size: 0.9rem; padding: 4px 12px;">
+                ★ 4.8
+              </span>
+              <span class="status-badge status-accepted" style="font-size: 0.75rem; font-weight: 700;">
+                ✓ Verified Kitchen
+              </span>
+            </div>
+
+            <p id="rest-cuisine" style="font-size: 1rem; color: var(--primary); font-weight: 700; margin-bottom: 6px;"></p>
+            <p id="rest-address" style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 14px;"></p>
+
+            <!-- Delivery & Kitchen Perks Row -->
+            <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 12px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>⚡</span> <strong>25-35 mins</strong> Delivery
+              </div>
+              <span style="color: var(--border);">|</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>🧼</span> <strong>FSSAI Certified</strong>
+              </div>
+              <span style="color: var(--border);">|</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>💳</span> <strong>COD & Online</strong> Available
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Dishes Menu Section -->
-  <div class="container" style="padding-top: 36px; padding-bottom: 90px;">
-    <!-- Category Tabs -->
-    <div class="category-strip" id="menu-categories" style="margin-bottom: 24px;">
-      <button class="category-chip active" data-cat="All">All Dishes</button>
+  <div class="container" style="padding-top: 24px; padding-bottom: 110px;">
+    
+    <!-- Notice if cart has dishes from a DIFFERENT restaurant -->
+    <div id="other-restaurant-cart-banner" style="display: none; background: #FFF8E1; border: 1px solid #FFE082; border-radius: var(--radius-md); padding: 14px 20px; margin-bottom: 22px; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(0,0,0,0.05); animation: slideUp 0.3s ease;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.5rem;">ℹ️</span>
+        <div>
+          <div style="font-weight: 700; color: #5D4037; font-size: 0.95rem;">Cart Contains Dishes from Another Restaurant</div>
+          <div id="other-restaurant-cart-text" style="font-size: 0.85rem; color: #795548; margin-top: 2px;">
+            Your cart currently has items from another restaurant. AdvanceFoodnest delivers from one restaurant per order.
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="./cart.html" class="btn btn-primary btn-sm" style="font-weight: 700; padding: 6px 14px; font-size: 0.85rem;">
+          View Cart 🛒
+        </a>
+        <button id="clear-other-cart-btn" class="btn btn-outline btn-sm" style="font-weight: 700; padding: 6px 14px; font-size: 0.85rem; color: var(--danger); border-color: rgba(239,68,68,0.35);">
+          Clear & Switch Here 🗑️
+        </button>
+      </div>
     </div>
 
+    <!-- 1-Click Combo Pick Banner -->
+    <div id="combo-banner" style="background: linear-gradient(135deg, rgba(255,107,0,0.09) 0%, rgba(255,107,0,0.03) 100%); border: 1.5px dashed rgba(255,107,0,0.45); border-radius: var(--radius-md); padding: 16px 22px; margin-bottom: 24px; display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 16px rgba(255,107,0,0.08);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 44px; height: 44px; background: rgba(255,107,0,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+          🔥
+        </div>
+        <div>
+          <div style="font-weight: 800; font-size: 1.05rem; color: var(--dark); display: flex; align-items: center; gap: 8px;">
+            Chef's Popular Multi-Dish Combo
+            <span style="background: var(--primary); color: #FFF; font-size: 0.72rem; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 800;">SAVE TIME</span>
+          </div>
+          <div id="combo-desc" style="font-size: 0.88rem; color: var(--text-muted); margin-top: 3px;">
+            Add top popular dishes from this kitchen together in 1 click!
+          </div>
+        </div>
+      </div>
+      <button id="add-combo-btn" class="btn btn-primary btn-sm" style="box-shadow: 0 4px 14px rgba(255,107,0,0.35); font-weight: 800; padding: 8px 18px;">
+        ⚡ Add Combo to Cart
+      </button>
+    </div>
+
+    <!-- Multi-Select Action Bar (Shows when Multi-Select is enabled) -->
+    <div id="multi-select-toolbar" style="display: none; background: #FFFBF7; border: 2px solid var(--primary); border-radius: var(--radius-md); padding: 14px 22px; margin-bottom: 22px; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 6px 20px rgba(255,107,0,0.18); animation: slideUp 0.25s ease;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.4rem; color: var(--primary);">☑</span>
+        <div>
+          <div style="font-weight: 800; font-size: 1rem; color: var(--dark);">Multi-Dish Selection Mode Active</div>
+          <div id="multi-select-summary-text" style="font-size: 0.86rem; color: var(--text-muted);">
+            Check multiple dishes below and add them together with one click!
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="add-selected-btn" class="btn btn-primary btn-sm" style="font-weight: 800; box-shadow: 0 4px 12px rgba(255,107,0,0.35);" disabled>
+          ⚡ Add Selected Dishes (0)
+        </button>
+        <button id="cancel-multiselect-btn" class="btn btn-outline btn-sm" style="font-weight: 700;">
+          Cancel ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter & Search Controls Header -->
+    <div style="background: #FFF; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+      
+      <!-- Top Row: Search & Multi-Select Mode -->
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px;">
+        <!-- Live Dish Search -->
+        <div style="position: relative; flex: 1; min-width: 240px; max-width: 400px;">
+          <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.95rem; color: var(--text-muted);">🔍</span>
+          <input type="text" id="menu-search-input" class="menu-search-input" placeholder="Search dishes in this menu...">
+        </div>
+
+        <!-- Dietary Filters & Multi-Select Toggle -->
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 6px;">
+            <button class="diet-filter-btn active" data-diet="all">All</button>
+            <button class="diet-filter-btn" data-diet="veg">
+              <span class="diet-badge veg"></span> Veg
+            </button>
+            <button class="diet-filter-btn" data-diet="non-veg">
+              <span class="diet-badge non-veg"></span> Non-Veg
+            </button>
+          </div>
+
+          <button id="toggle-multiselect-btn" class="btn btn-outline btn-sm" style="font-weight: 700; border-radius: var(--radius-full); padding: 6px 14px; border-color: var(--primary); color: var(--primary); display: flex; align-items: center; gap: 6px;">
+            <span>☑</span> Select Multiple Dishes
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Category Chips Strip -->
+      <div style="border-top: 1px solid rgba(228, 228, 231, 0.6); padding-top: 12px;">
+        <div class="category-strip" id="menu-categories" style="padding: 4px 0 0; margin-bottom: 0;">
+          <button class="category-chip active" data-cat="All">All Dishes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dishes Grid -->
     <div class="grid-dishes" id="dishes-grid">
       <div class="card skeleton" style="height: 280px;"></div>
       <div class="card skeleton" style="height: 280px;"></div>
@@ -42,26 +373,46 @@
   </div>
 
   <!-- Sticky Bottom Cart Bar -->
-  <div id="bottom-cart-bar" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 600px; background: var(--dark); color: #FFF; padding: 14px 24px; border-radius: var(--radius-full); box-shadow: var(--shadow-lg); display: none; align-items: center; justify-content: space-between; z-index: 90; animation: slideUp 0.3s ease;">
-    <div>
-      <span id="bottom-cart-count" style="font-weight: 700;">0 items</span> in your cart
+  <div id="bottom-cart-bar" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 680px; background: rgba(23, 23, 23, 0.94); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); color: #FFF; padding: 12px 24px; border-radius: var(--radius-full); box-shadow: 0 12px 36px rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); display: none; align-items: center; justify-content: space-between; z-index: 90; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="width: 40px; height: 40px; background: rgba(255, 107, 0, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+        🛒
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 8px; height: 8px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
+          <span id="bottom-cart-count" style="font-weight: 700; font-size: 0.95rem;">0 items</span> in cart
+          <span style="color: rgba(255,255,255,0.4);">•</span>
+          <span id="bottom-cart-total" style="font-weight: 800; color: var(--primary); font-size: 1.15rem;">₹0.00</span>
+        </div>
+        <div style="font-size: 0.76rem; color: rgba(255,255,255,0.6);">Extra taxes and delivery applied at checkout</div>
+      </div>
     </div>
-    <a href="./cart.html" class="btn btn-primary btn-sm" style="border-radius: var(--radius-full);">
-      View Cart & Checkout →
+    <a href="./cart.html" class="bottom-checkout-btn">
+      View Cart & Checkout <span class="arrow">→</span>
     </a>
   </div>
 
   <script type="module">
     import { checkAuth, renderNavbar } from '../shared/js/auth.js';
-    import { apiRequest, addToCart, getCart, getCartTotalCount } from '../shared/js/api.js';
+    import { apiRequest, addToCart, addMultipleToCart, updateCartQuantity, getCart, getCartTotalCount, clearCart } from '../shared/js/api.js';
 
     let currentRestaurant = null;
     let menuDishes = [];
     let selectedCategory = 'All';
+    let selectedDiet = 'all'; // 'all' | 'veg' | 'non-veg'
+    let searchQuery = '';
+    let isMultiSelectMode = false;
+    const selectedMultiDishes = new Map(); // dishId -> { dish, quantity }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      await checkAuth();
-      renderNavbar('restaurants');
+    // Start initialization immediately
+    initPage();
+
+    async function initPage() {
+      // Async auth check & top navbar
+      checkAuth().then(() => {
+        renderNavbar('restaurants');
+      });
 
       const params = new URLSearchParams(window.location.search);
       const restId = params.get('id');
@@ -74,11 +425,126 @@
 
       await loadRestaurantData(restId);
       updateBottomCartBar();
+      checkOtherRestaurantCart();
 
-      window.addEventListener('cart-updated', () => {
-        updateBottomCartBar();
+      // Search input listener
+      const searchInput = document.getElementById('menu-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          searchQuery = e.target.value.trim().toLowerCase();
+          renderDishes();
+        });
+      }
+
+      // Dietary filter buttons
+      document.querySelectorAll('.diet-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.diet-filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedDiet = btn.dataset.diet;
+          renderDishes();
+        });
       });
-    });
+
+      // Multi-Select toggle button click
+      const toggleBtn = document.getElementById('toggle-multiselect-btn');
+      if (toggleBtn) {
+        toggleBtn.onclick = () => {
+          isMultiSelectMode = !isMultiSelectMode;
+          selectedMultiDishes.clear();
+          updateMultiSelectUI();
+          renderDishes();
+        };
+      }
+
+      // Multi-Select Cancel button
+      const cancelBtn = document.getElementById('cancel-multiselect-btn');
+      if (cancelBtn) {
+        cancelBtn.onclick = () => {
+          isMultiSelectMode = false;
+          selectedMultiDishes.clear();
+          updateMultiSelectUI();
+          renderDishes();
+        };
+      }
+
+      // Multi-Select "Add Selected Dishes" button
+      const addSelectedBtn = document.getElementById('add-selected-btn');
+      if (addSelectedBtn) {
+        addSelectedBtn.onclick = async () => {
+          if (selectedMultiDishes.size === 0) return;
+          const itemsToAdd = Array.from(selectedMultiDishes.values()).map(item => ({
+            dish: {
+              ...item.dish,
+              restaurantId: (currentRestaurant && currentRestaurant.id) || item.dish.restaurantId,
+              restaurantName: (currentRestaurant && currentRestaurant.name) || item.dish.restaurantName || 'Restaurant'
+            },
+            quantity: item.quantity || 1
+          }));
+
+          const added = await addMultipleToCart(itemsToAdd);
+          if (added) {
+            isMultiSelectMode = false;
+            selectedMultiDishes.clear();
+            updateMultiSelectUI();
+            renderDishes();
+            updateBottomCartBar();
+            checkOtherRestaurantCart();
+          }
+        };
+      }
+
+      // Multi-tab and reactive cart sync listeners
+      window.addEventListener('cart-updated', () => {
+        renderDishes();
+        updateBottomCartBar();
+        checkOtherRestaurantCart();
+      });
+
+      window.addEventListener('storage', (e) => {
+        if (!e.key || e.key === 'foodnest_cart') {
+          renderDishes();
+          updateBottomCartBar();
+          checkOtherRestaurantCart();
+        }
+      });
+
+      window.addEventListener('focus', () => {
+        renderDishes();
+        updateBottomCartBar();
+        checkOtherRestaurantCart();
+      });
+    }
+
+    function checkOtherRestaurantCart() {
+      const banner = document.getElementById('other-restaurant-cart-banner');
+      const textEl = document.getElementById('other-restaurant-cart-text');
+      const clearBtn = document.getElementById('clear-other-cart-btn');
+      if (!banner) return;
+
+      const cart = getCart();
+      const cartHasItems = cart.items && cart.items.length > 0;
+      const currentRestId = currentRestaurant ? String(currentRestaurant.id) : null;
+      const cartRestId = cart.restaurantId ? String(cart.restaurantId) : null;
+
+      if (cartHasItems && currentRestId && cartRestId && currentRestId !== cartRestId) {
+        banner.style.display = 'flex';
+        const itemCount = getCartTotalCount();
+        if (textEl) {
+          textEl.innerHTML = `Your cart currently contains <strong>${itemCount} item${itemCount > 1 ? 's' : ''}</strong> from <strong>"${cart.restaurantName || 'another restaurant'}"</strong>. AdvanceFoodnest delivers from one restaurant per order.`;
+        }
+        if (clearBtn) {
+          clearBtn.onclick = () => {
+            clearCart();
+            banner.style.display = 'none';
+            renderDishes();
+            updateBottomCartBar();
+          };
+        }
+      } else {
+        banner.style.display = 'none';
+      }
+    }
 
     async function loadRestaurantData(restId) {
       // 1. Fetch restaurant info
@@ -86,6 +552,7 @@
       if (restRes.success && restRes.data) {
         currentRestaurant = restRes.data;
         document.getElementById('rest-name').textContent = currentRestaurant.name;
+        document.getElementById('bc-name').textContent = currentRestaurant.name;
         document.getElementById('rest-cuisine').textContent = currentRestaurant.cuisineType;
         document.getElementById('rest-address').textContent = currentRestaurant.address;
         document.getElementById('rest-rating').textContent = `★ ${currentRestaurant.rating}`;
@@ -96,14 +563,55 @@
       const menuRes = await apiRequest(`/restaurants/${restId}/menu`);
       if (menuRes.success && menuRes.data) {
         menuDishes = menuRes.data;
+        setupComboBanner();
         renderCategoryTabs();
         renderDishes();
+        checkOtherRestaurantCart();
       } else {
         document.getElementById('dishes-grid').innerHTML = `
-          <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">
-            No dishes available for this restaurant currently.
+          <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 50px;">
+            <div style="font-size: 2.5rem; margin-bottom: 8px;">🍽️</div>
+            <h3>No dishes available for this restaurant currently.</h3>
           </div>
         `;
+      }
+    }
+
+    function setupComboBanner() {
+      const banner = document.getElementById('combo-banner');
+      if (!banner || menuDishes.length < 2) return;
+
+      const topTwo = menuDishes.slice(0, 2);
+      const comboDesc = document.getElementById('combo-desc');
+      const comboPrice = (topTwo[0].price + topTwo[1].price).toFixed(2);
+      if (comboDesc) {
+        comboDesc.textContent = `Get "${topTwo[0].name}" + "${topTwo[1].name}" together in 1 click (Total: ₹${comboPrice})!`;
+      }
+
+      banner.style.display = 'flex';
+      const comboBtn = document.getElementById('add-combo-btn');
+      if (comboBtn) {
+        comboBtn.onclick = async () => {
+          const itemsToAdd = topTwo.map(d => ({
+            dish: {
+              id: d.id,
+              dishId: d.id,
+              name: d.name,
+              price: d.price,
+              imageUrl: getDishImage(d),
+              restaurantId: (currentRestaurant && currentRestaurant.id) || d.restaurantId,
+              restaurantName: (currentRestaurant && currentRestaurant.name) || d.restaurantName || 'Restaurant'
+            },
+            quantity: 1
+          }));
+
+          const added = await addMultipleToCart(itemsToAdd);
+          if (added) {
+            renderDishes();
+            updateBottomCartBar();
+            checkOtherRestaurantCart();
+          }
+        };
       }
     }
 
@@ -126,65 +634,317 @@
       });
     }
 
+    function updateMultiSelectUI() {
+      const toolbar = document.getElementById('multi-select-toolbar');
+      const toggleBtn = document.getElementById('toggle-multiselect-btn');
+      const addSelectedBtn = document.getElementById('add-selected-btn');
+      const summaryText = document.getElementById('multi-select-summary-text');
+
+      if (isMultiSelectMode) {
+        toolbar.style.display = 'flex';
+        toggleBtn.classList.add('btn-primary');
+        toggleBtn.classList.remove('btn-outline');
+        toggleBtn.innerHTML = '<span>✓</span> Multi-Select Active';
+
+        const totalSelected = selectedMultiDishes.size;
+        let subtotal = 0;
+        selectedMultiDishes.forEach(item => {
+          subtotal += parseFloat(item.dish.price || 0) * (item.quantity || 1);
+        });
+
+        if (totalSelected > 0) {
+          addSelectedBtn.disabled = false;
+          addSelectedBtn.innerHTML = `⚡ Add Selected (${totalSelected} dish${totalSelected > 1 ? 'es' : ''} • ₹${subtotal.toFixed(2)}) 🛒`;
+          summaryText.textContent = `${totalSelected} dish${totalSelected > 1 ? 'es' : ''} selected. Total: ₹${subtotal.toFixed(2)}`;
+        } else {
+          addSelectedBtn.disabled = true;
+          addSelectedBtn.textContent = '⚡ Add Selected Dishes (0)';
+          summaryText.textContent = 'Click on dishes below to select them.';
+        }
+      } else {
+        toolbar.style.display = 'none';
+        toggleBtn.classList.remove('btn-primary');
+        toggleBtn.classList.add('btn-outline');
+        toggleBtn.innerHTML = '<span>☑</span> Select Multiple Dishes';
+      }
+    }
+
+    function isDishVegetarian(d) {
+      const name = (d.name || '').toLowerCase();
+      const cat = (d.category || '').toLowerCase();
+      if (name.includes('chicken') || name.includes('mutton') || name.includes('fish') || name.includes('egg') || name.includes('meat') || name.includes('prawn') || name.includes('beef') || name.includes('pork')) {
+        return false;
+      }
+      if (cat.includes('biryani') && (name.includes('chicken') || name.includes('mutton'))) {
+        return false;
+      }
+      if (cat.includes('starters') && (name.includes('chicken') || name.includes('mutton'))) {
+        return false;
+      }
+      if (name.includes('naan') || name.includes('roti') || name.includes('paneer') || name.includes('fries') || cat.includes('veg') || cat.includes('breads') || cat.includes('sides')) {
+        return true;
+      }
+      // Default to non-veg if chicken/mutton or starters
+      return !name.includes('fry') && !name.includes('65');
+    }
+
+    function getDishImage(d) {
+      const isNaan = (d.name && d.name.toLowerCase().includes('naan')) || d.category === 'Breads';
+      const defaultImg = isNaan 
+        ? 'https://images.unsplash.com/photo-1626074353765-517a681e40be?w=600'
+        : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600';
+
+      if (d.imageUrl && !d.imageUrl.includes('photo-1584947897642-8326a26cf6f9')) {
+        return d.imageUrl;
+      }
+      return defaultImg;
+    }
+
     function renderDishes() {
       let filtered = menuDishes;
+
+      // Category filter
       if (selectedCategory !== 'All') {
         filtered = filtered.filter(d => d.category === selectedCategory);
       }
 
+      // Dietary filter
+      if (selectedDiet === 'veg') {
+        filtered = filtered.filter(d => isDishVegetarian(d));
+      } else if (selectedDiet === 'non-veg') {
+        filtered = filtered.filter(d => !isDishVegetarian(d));
+      }
+
+      // Search filter
+      if (searchQuery) {
+        filtered = filtered.filter(d => 
+          d.name.toLowerCase().includes(searchQuery) || 
+          (d.description && d.description.toLowerCase().includes(searchQuery)) ||
+          d.category.toLowerCase().includes(searchQuery)
+        );
+      }
+
       const grid = document.getElementById('dishes-grid');
       if (filtered.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No items in this category.</div>';
+        grid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 50px;">
+            <div style="font-size: 2.2rem; margin-bottom: 8px;">🔍</div>
+            <h3>No dishes found matching your filters.</h3>
+            <p style="font-size: 0.9rem; margin-top: 4px;">Try searching for another keyword or reset filters.</p>
+          </div>
+        `;
         return;
       }
 
-      grid.innerHTML = filtered.map(d => `
-        <div class="card">
-          <div class="card-img-wrap">
-            <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" alt="${d.name}" class="card-img">
-            <span class="card-badge">${d.category}</span>
-          </div>
-          <div class="card-body">
-            <h3 class="card-title">${d.name}</h3>
-            <p class="card-subtitle" style="font-size: 0.82rem; height: 38px; overflow: hidden; text-overflow: ellipsis;">
-              ${d.description || 'Deliciously prepared with top quality ingredients.'}
-            </p>
-            <div class="card-footer">
-              <span class="dish-price">₹${d.price}</span>
-              <button class="btn btn-primary btn-sm add-cart-btn" data-id="${d.id}">
-                Add to Cart 🛒
-              </button>
+      const cart = getCart();
+
+      grid.innerHTML = filtered.map((d, index) => {
+        const cartItem = (cart.items || []).find(i => String(i.dishId) === String(d.id) || String(i.id) === String(d.id));
+        const qtyInCart = cartItem ? (cartItem.quantity || 0) : 0;
+        const isMultiSelected = selectedMultiDishes.has(d.id);
+        const isVeg = isDishVegetarian(d);
+
+        let cardClass = 'card stagger-card';
+        if (isMultiSelectMode && isMultiSelected) {
+          cardClass += ' multi-select-active-card';
+        } else if (!isMultiSelectMode && qtyInCart > 0) {
+          cardClass += ' dish-card-active';
+        }
+
+        const imgUrl = getDishImage(d);
+        const fallbackImg = isVeg
+          ? 'https://images.unsplash.com/photo-1626074353765-517a681e40be?w=600'
+          : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600';
+
+        // Badges and controls
+        let headerBadge = '';
+        if (isMultiSelectMode) {
+          headerBadge = `
+            <label class="multi-select-checkbox-wrap" onclick="event.stopPropagation()">
+              <input type="checkbox" class="multi-cb" data-id="${d.id}" ${isMultiSelected ? 'checked' : ''}>
+              <span style="font-size: 0.8rem; font-weight: 700; color: var(--dark);">${isMultiSelected ? 'Selected' : 'Select'}</span>
+            </label>
+          `;
+        } else if (qtyInCart > 0) {
+          headerBadge = `
+            <div class="in-cart-indicator">
+              <span>✓</span> ${qtyInCart} in cart
+            </div>
+          `;
+        }
+
+        let actionHtml = '';
+        if (isMultiSelectMode) {
+          actionHtml = `
+            <button class="btn ${isMultiSelected ? 'btn-success' : 'btn-outline'} btn-sm toggle-select-dish-btn" data-id="${d.id}" style="font-weight: 700; border-radius: var(--radius-md);">
+              ${isMultiSelected ? '✓ Selected' : '+ Select'}
+            </button>
+          `;
+        } else if (qtyInCart > 0) {
+          actionHtml = `
+            <div class="menu-qty-stepper">
+              <button class="menu-stepper-btn stepper-minus" data-id="${d.id}" title="Decrease quantity">−</button>
+              <span class="menu-stepper-qty">${qtyInCart}</span>
+              <button class="menu-stepper-btn stepper-plus" data-id="${d.id}" title="Increase quantity">+</button>
+            </div>
+          `;
+        } else {
+          actionHtml = `
+            <button class="btn btn-primary btn-sm add-cart-btn" data-id="${d.id}" style="box-shadow: 0 3px 10px rgba(255,107,0,0.28); font-weight: 700; border-radius: var(--radius-md); padding: 8px 16px;">
+              Add 🛒
+            </button>
+          `;
+        }
+
+        const dietTag = isVeg 
+          ? `<span class="diet-badge veg" title="Vegetarian"></span>` 
+          : `<span class="diet-badge non-veg" title="Non-Vegetarian"></span>`;
+
+        return `
+          <div class="${cardClass}" id="dish-card-${d.id}" style="position: relative; animation-delay: ${index * 0.05}s; cursor: ${isMultiSelectMode ? 'pointer' : 'default'};">
+            ${headerBadge}
+            <div class="card-img-wrap" style="height: 180px;">
+              <img src="${imgUrl}" alt="${d.name}" class="card-img" onerror="this.onerror=null; this.src='${fallbackImg}';">
+              <span class="card-badge" style="background: rgba(23, 23, 23, 0.88);">${d.category}</span>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                ${dietTag}
+                <h3 class="card-title" style="font-size: 1.12rem; margin: 0; line-height: 1.3;">${d.name}</h3>
+              </div>
+              <p class="card-subtitle" style="font-size: 0.83rem; height: 38px; overflow: hidden; text-overflow: ellipsis; line-height: 1.45; color: var(--text-muted);">
+                ${d.description || 'Deliciously prepared with authentic ingredients and spices.'}
+              </p>
+              <div class="card-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+                <div>
+                  <span class="dish-price" style="font-size: 1.25rem; font-weight: 800; color: var(--dark);">₹${d.price}</span>
+                  <div style="font-size: 0.72rem; color: #10B981; font-weight: 700;">★ 4.8 (Popular)</div>
+                </div>
+                <div class="dish-action-slot">
+                  ${actionHtml}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
+      attachDishActionListeners();
+    }
+
+    function attachDishActionListeners() {
+      const grid = document.getElementById('dishes-grid');
+      if (!grid) return;
+
+      if (isMultiSelectMode) {
+        // Multi-Select card click toggles item
+        grid.querySelectorAll('.card').forEach(card => {
+          const cardId = parseInt(card.id.replace('dish-card-', ''));
+          const dish = menuDishes.find(d => d.id === cardId);
+          if (!dish) return;
+
+          card.onclick = (e) => {
+            if (selectedMultiDishes.has(dish.id)) {
+              selectedMultiDishes.delete(dish.id);
+            } else {
+              selectedMultiDishes.set(dish.id, { dish, quantity: 1 });
+            }
+            updateMultiSelectUI();
+            renderDishes();
+          };
+        });
+
+        // Checkbox click
+        grid.querySelectorAll('.multi-cb').forEach(cb => {
+          cb.onchange = (e) => {
+            e.stopPropagation();
+            const dishId = parseInt(cb.dataset.id);
+            const dish = menuDishes.find(d => d.id === dishId);
+            if (!dish) return;
+            if (cb.checked) {
+              selectedMultiDishes.set(dish.id, { dish, quantity: 1 });
+            } else {
+              selectedMultiDishes.delete(dish.id);
+            }
+            updateMultiSelectUI();
+            renderDishes();
+          };
+        });
+        return;
+      }
+
+      // NORMAL MODE: Individual fast-add with quantity stepper
       grid.querySelectorAll('.add-cart-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.onclick = async (e) => {
+          e.stopPropagation();
           const dishId = parseInt(btn.dataset.id);
           const dish = menuDishes.find(d => d.id === dishId);
-          if (dish && currentRestaurant) {
-            addToCart({
-              id: dish.id,
-              name: dish.name,
-              price: dish.price,
-              imageUrl: dish.imageUrl,
-              restaurantId: currentRestaurant.id,
-              restaurantName: currentRestaurant.name
-            }, 1);
+          if (!dish) return;
+
+          const restId = (currentRestaurant && currentRestaurant.id) || dish.restaurantId;
+          const restName = (currentRestaurant && currentRestaurant.name) || dish.restaurantName || 'Restaurant';
+
+          const added = await addToCart({
+            id: dish.id,
+            dishId: dish.id,
+            name: dish.name,
+            price: dish.price,
+            imageUrl: getDishImage(dish),
+            restaurantId: restId,
+            restaurantName: restName
+          }, 1);
+
+          if (added) {
+            renderDishes();
+            updateBottomCartBar();
+            checkOtherRestaurantCart();
           }
-        });
+        };
+      });
+
+      // Stepper [+] click
+      grid.querySelectorAll('.stepper-plus').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const dishId = parseInt(btn.dataset.id);
+          const cart = getCart();
+          const item = (cart.items || []).find(i => String(i.dishId) === String(dishId) || String(i.id) === String(dishId));
+          const currentQty = item ? (item.quantity || 1) : 1;
+          updateCartQuantity(dishId, currentQty + 1);
+          renderDishes();
+          updateBottomCartBar();
+        };
+      });
+
+      // Stepper [−] click
+      grid.querySelectorAll('.stepper-minus').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const dishId = parseInt(btn.dataset.id);
+          const cart = getCart();
+          const item = (cart.items || []).find(i => String(i.dishId) === String(dishId) || String(i.id) === String(dishId));
+          const currentQty = item ? (item.quantity || 1) : 1;
+          updateCartQuantity(dishId, currentQty - 1);
+          renderDishes();
+          updateBottomCartBar();
+        };
       });
     }
 
     function updateBottomCartBar() {
       const bar = document.getElementById('bottom-cart-bar');
       const countEl = document.getElementById('bottom-cart-count');
-      const total = getCartTotalCount();
+      const totalEl = document.getElementById('bottom-cart-total');
+      const cart = getCart();
+      const totalCount = getCartTotalCount();
 
-      if (total > 0) {
+      if (totalCount > 0) {
         bar.style.display = 'flex';
-        countEl.textContent = `${total} item${total > 1 ? 's' : ''}`;
+        countEl.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+        if (totalEl) {
+          const subtotal = (cart.items || []).reduce((sum, i) => sum + (parseFloat(i.price || 0) * (i.quantity || 1)), 0);
+          totalEl.textContent = `₹${subtotal.toFixed(2)}`;
+        }
       } else {
         bar.style.display = 'none';
       }

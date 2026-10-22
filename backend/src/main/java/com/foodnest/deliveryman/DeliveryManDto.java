@@ -1,5 +1,7 @@
 package com.foodnest.deliveryman;
 
+import java.time.LocalDateTime;
+
 public class DeliveryManDto {
     private Long id;
     private String fullName;
@@ -8,6 +10,9 @@ public class DeliveryManDto {
     private String vehicleType;
     private Boolean isAvailable;
     private String accountStatus;
+    private Double latitude;
+    private Double longitude;
+    private LocalDateTime lastActiveAt;
 
     public DeliveryManDto() {
     }
@@ -21,6 +26,9 @@ public class DeliveryManDto {
         dto.setVehicleType(dm.getVehicleType());
         dto.setIsAvailable(dm.getIsAvailable());
         dto.setAccountStatus(dm.getAccountStatus());
+        dto.setLatitude(dm.getLatitude());
+        dto.setLongitude(dm.getLongitude());
+        dto.setLastActiveAt(dm.getLastActiveAt());
         return dto;
     }
 
@@ -78,5 +86,29 @@ public class DeliveryManDto {
 
     public void setAccountStatus(String accountStatus) {
         this.accountStatus = accountStatus;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public LocalDateTime getLastActiveAt() {
+        return lastActiveAt;
+    }
+
+    public void setLastActiveAt(LocalDateTime lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
     }
 }

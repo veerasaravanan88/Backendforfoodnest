@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,83 +11,199 @@
   <div id="navbar-container"></div>
 
   <div class="container container-sm" style="margin-top: 50px; margin-bottom: 60px;">
-    <div class="form-card">
-      <div style="text-align: center; margin-bottom: 28px;">
-        <div style="font-size: 2.2rem; margin-bottom: 8px;">👨‍🍳</div>
-        <h2 style="font-size: 1.8rem;">Restaurant Partner Portal</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
-          Manage your menu, incoming orders, and live kitchen dispatch.
+    <div class="form-card" style="box-shadow: var(--shadow-lg); border: 1px solid rgba(255,107,0,0.15);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 2.4rem; margin-bottom: 8px;">👨‍🍳</div>
+        <h2 style="font-size: 1.8rem; font-weight: 800;">Restaurant Partner Portal</h2>
+        <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 4px;">
+          Manage kitchen menu, incoming live orders, and dispatch tracking.
         </p>
       </div>
 
-      <div style="background: var(--primary-light); border: 1px solid rgba(255,107,0,0.2); padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 24px; font-size: 0.85rem; color: var(--dark);">
-        <strong>Demo Accounts (Strict Isolation Demonstration):</strong><br>
-        1. <strong>Fastfoods</strong>: <code>fastfoods@foodnest.com</code> | <code>password123</code><br>
-        2. <strong>Foodies</strong>: <code>foodies@foodnest.com</code> | <code>password123</code>
+      <!-- Live Auth / Error / Status Banner -->
+      <div id="auth-alert" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4;"></div>
+
+      <!-- Quick 1-Click Demo Login Selector (Swiggy Partner Style) -->
+      <div style="background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 24px;">
+        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); margin-bottom: 8px;">
+          ⚡ Instant 1-Click Demo Login (Strict Isolation)
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button type="button" id="demo-fastfoods-btn" class="btn btn-outline btn-sm" style="background: #FFF; font-size: 0.82rem; padding: 10px 8px; text-align: left; border-color: #FED7AA; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-weight: 700; color: var(--dark);">🍔 Fastfoods</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Burgers & Shakes</span>
+          </button>
+          <button type="button" id="demo-foodies-btn" class="btn btn-outline btn-sm" style="background: #FFF; font-size: 0.82rem; padding: 10px 8px; text-align: left; border-color: #FED7AA; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-weight: 700; color: var(--dark);">🍛 Foodies</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Hyderabadi Biryani</span>
+          </button>
+        </div>
       </div>
 
       <form id="restaurant-login-form">
         <div class="form-group">
-          <label class="form-label" for="email">Restaurant Email</label>
-          <input type="email" id="email" class="form-input" placeholder="e.g. fastfoods@foodnest.com" required value="fastfoods@foodnest.com">
+          <label class="form-label" for="email">Restaurant Partner Email</label>
+          <input type="email" id="email" class="form-input" placeholder="e.g. fastfoods@foodnest.com" required autocomplete="email">
         </div>
 
         <div class="form-group">
           <label class="form-label" for="password">Password</label>
-          <input type="password" id="password" class="form-input" placeholder="••••••••" required value="password123">
+          <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
         </div>
 
-        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px; font-weight: 700;">
           Log In to Kitchen Dashboard
         </button>
       </form>
 
       <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        New Restaurant? <a href="./register.html" style="color: var(--primary); font-weight: 600;">Register your kitchen</a>
+        New Restaurant Partner? <a href="./register.html" style="color: var(--primary); font-weight: 700;">Register your kitchen &rarr;</a>
+      </div>
+
+      <div style="text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--text-muted);">
+        Looking for consumer ordering? <a href="../customer/login.html" style="color: var(--dark); font-weight: 600;">Customer Login</a> |
+        <a href="../deliveryman/login.html" style="color: var(--dark); font-weight: 600;">Rider Login</a>
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
-    import { apiRequest } from '../shared/js/api.js';
-    import { showToast } from '../shared/js/toast.js';
+    import { checkAuth, saveAuthSession, renderNavbar } from '../shared/js/auth.js?v=2';
+    import { apiRequest } from '../shared/js/api.js?v=2';
+    import { showToast } from '../shared/js/toast.js?v=2';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      if (user && user.role === 'RESTAURANT') {
-        window.location.href = './dashboard.html';
+    function setAlert(message, type = 'error') {
+      const alert = document.getElementById('auth-alert');
+      if (!alert) return;
+      if (!message) {
+        alert.style.display = 'none';
         return;
       }
-      renderNavbar();
+      alert.style.display = 'block';
+      if (type === 'error') {
+        alert.style.background = '#FEE2E2';
+        alert.style.border = '1px solid #FCA5A5';
+        alert.style.color = '#991B1B';
+      } else if (type === 'success') {
+        alert.style.background = '#DCFCE7';
+        alert.style.border = '1px solid #86EFAC';
+        alert.style.color = '#166534';
+      } else {
+        alert.style.background = '#E0F2FE';
+        alert.style.border = '1px solid #BAE6FD';
+        alert.style.color = '#075985';
+      }
+      alert.innerHTML = message;
 
-      const form = document.getElementById('restaurant-login-form');
-      const submitBtn = document.getElementById('submit-btn');
+      const dynamicBtn = document.getElementById('dynamic-create-rest-btn');
+      if (dynamicBtn) {
+        dynamicBtn.onclick = () => doQuickRestaurantRegister();
+      }
+    }
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Logging in...';
+    const form = document.getElementById('restaurant-login-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
 
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+    // Check for role-based access denial query param
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('error') === 'restaurant_required') {
+      setAlert('⚠️ <strong>Access Denied:</strong> This section is for <strong>RESTAURANT</strong> accounts only. Please sign in with your restaurant partner credentials below.', 'error');
+    }
 
+    async function doLogin(email, password) {
+      if (!email || !password) {
+        setAlert('Please enter your restaurant email and password.', 'error');
+        return;
+      }
+
+      setAlert('', '');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in to Kitchen...';
+
+      try {
         const res = await apiRequest('/auth/restaurant/login', {
           method: 'POST',
+          role: 'RESTAURANT',
           body: JSON.stringify({ email, password })
         });
 
         if (res.success) {
-          showToast('Signed in successfully as Restaurant Partner!', 'success');
+          saveAuthSession(res.data, res.data?.token, 'RESTAURANT');
+          setAlert('✅ Signed in successfully! Redirecting to Kitchen Dashboard...', 'success');
+          showToast(`Welcome back, ${res.data?.fullName || 'Partner'}!`, 'success');
           setTimeout(() => {
             window.location.href = './dashboard.html';
-          }, 400);
+          }, 300);
         } else {
-          showToast(res.message || 'Login failed', 'error');
+          const err = res.message || 'Login failed. Please verify credentials.';
+          const helpMsg = `
+            <div style="font-weight: 700; margin-bottom: 6px;">❌ ${err}</div>
+            <div style="font-size: 0.82rem; margin-bottom: 8px;">Need to register your kitchen?</div>
+            <a href="./register.html?email=${encodeURIComponent(email)}" class="btn btn-primary btn-sm btn-full" style="font-weight: 700; display: block; text-align: center; text-decoration: none;">
+              ✨ Register Kitchen for ${email}
+            </a>
+          `;
+          setAlert(helpMsg, 'error');
+          showToast(err, 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Log In to Kitchen Dashboard';
         }
-      });
+      } catch (err) {
+        console.error('Restaurant login error:', err);
+        setAlert('❌ Cannot reach backend server. Please verify your connection.', 'error');
+        showToast('Backend connection failed', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Log In to Kitchen Dashboard';
+      }
+    }
+
+    function doQuickRestaurantRegister() {
+      const email = emailInput.value.trim();
+      window.location.href = `./register.html${email ? `?email=${encodeURIComponent(email)}` : ''}`;
+    }
+
+    // Attach listeners SYNCHRONOUSLY
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      doLogin(email, password);
+    });
+
+    submitBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      doLogin(email, password);
+    });
+
+    document.getElementById('demo-fastfoods-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      emailInput.value = 'fastfoods@foodnest.com';
+      passwordInput.value = 'password123';
+      doLogin('fastfoods@foodnest.com', 'password123');
+    });
+
+    document.getElementById('demo-foodies-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      emailInput.value = 'foodies@foodnest.com';
+      passwordInput.value = 'password123';
+      doLogin('foodies@foodnest.com', 'password123');
+    });
+
+    // Render navbar & background check specifically for RESTAURANT session
+    renderNavbar();
+    checkAuth('RESTAURANT').then(user => {
+      if (user && user.role === 'RESTAURANT') {
+        if (!urlParams.get('error')) {
+          setAlert(`You are already signed in as restaurant <strong>${user.fullName || user.email}</strong>. <a href="./dashboard.html" style="text-decoration:underline; font-weight:700;">Go to Kitchen Dashboard &rarr;</a>`, 'info');
+        }
+      }
+    }).catch(err => {
+      console.debug('Background checkAuth bypassed:', err);
     });
   </script>
 </body>

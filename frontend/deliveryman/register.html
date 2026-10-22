@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,29 +11,32 @@
   <div id="navbar-container"></div>
 
   <div class="container container-sm" style="margin-top: 40px; margin-bottom: 60px;">
-    <div class="form-card">
-      <div style="text-align: center; margin-bottom: 28px;">
+    <div class="form-card" style="box-shadow: var(--shadow-lg); border: 1px solid rgba(255,107,0,0.15);">
+      <div style="text-align: center; margin-bottom: 24px;">
         <div style="font-size: 2.2rem; margin-bottom: 8px;">🛵</div>
-        <h2 style="font-size: 1.8rem;">Join Our Delivery Fleet</h2>
+        <h2 style="font-size: 1.8rem; font-weight: 800;">Join Our Delivery Fleet</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
           Flexible hours, automatic assignment dispatch, and timely payouts.
         </p>
       </div>
 
-      <form id="rider-register-form">
+      <!-- Live Auth Alert Banner -->
+      <div id="auth-alert" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4;"></div>
+
+      <form id="rider-register-form" onsubmit="event.preventDefault(); return false;">
         <div class="form-group">
           <label class="form-label" for="fullName">Full Legal Name</label>
-          <input type="text" id="fullName" class="form-input" placeholder="e.g. David Vance" required minlength="2">
+          <input type="text" id="fullName" class="form-input" placeholder="e.g. David Vance" required minlength="2" autocomplete="name">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div class="form-group">
             <label class="form-label" for="email">Email Address</label>
-            <input type="email" id="email" class="form-input" placeholder="rider@example.com" required>
+            <input type="email" id="email" class="form-input" placeholder="rider@example.com" required autocomplete="email">
           </div>
           <div class="form-group">
             <label class="form-label" for="phone">Phone Number</label>
-            <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543210" required minlength="7">
+            <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543210" required minlength="7" autocomplete="tel">
           </div>
         </div>
 
@@ -48,73 +51,99 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="password">Password (min. 6 characters)</label>
-            <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6">
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6" autocomplete="new-password">
           </div>
         </div>
 
-        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px; font-weight: 700;">
           Register as Delivery Partner
         </button>
       </form>
 
       <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        Already registered? <a href="./login.html" style="color: var(--primary); font-weight: 600;">Sign in here</a>
+        Already registered? <a href="./login.html" style="color: var(--primary); font-weight: 700;">Sign in here &rarr;</a>
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
+    import { checkAuth, saveAuthSession, renderNavbar } from '../shared/js/auth.js';
     import { apiRequest } from '../shared/js/api.js';
     import { showToast } from '../shared/js/toast.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      if (user && user.role === 'DELIVERY_MAN') {
-        window.location.href = './dashboard.html';
+    function setAlert(message, type = 'error') {
+      const alert = document.getElementById('auth-alert');
+      if (!alert) return;
+      if (!message) {
+        alert.style.display = 'none';
         return;
       }
-      renderNavbar();
+      alert.style.display = 'block';
+      if (type === 'error') {
+        alert.style.background = '#FEE2E2';
+        alert.style.border = '1px solid #FCA5A5';
+        alert.style.color = '#991B1B';
+      } else if (type === 'success') {
+        alert.style.background = '#DCFCE7';
+        alert.style.border = '1px solid #86EFAC';
+        alert.style.color = '#166534';
+      }
+      alert.innerHTML = message;
+    }
 
-      const form = document.getElementById('rider-register-form');
-      const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('rider-register-form');
+    const submitBtn = document.getElementById('submit-btn');
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Registering rider...';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setAlert('', '');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Registering rider & logging in...';
 
-        const payload = {
-          fullName: document.getElementById('fullName').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          vehicleType: document.getElementById('vehicleType').value,
-          password: document.getElementById('password').value
-        };
+      const payload = {
+        fullName: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        vehicleType: document.getElementById('vehicleType').value,
+        password: document.getElementById('password').value
+      };
 
+      try {
         const res = await apiRequest('/auth/deliveryman/register', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
 
         if (res.success) {
-          showToast('Rider account created! Logging you in...', 'success');
-          // Auto login
-          const loginRes = await apiRequest('/auth/deliveryman/login', {
-            method: 'POST',
-            body: JSON.stringify({ email: payload.email, password: payload.password })
-          });
-          if (loginRes.success) {
-            setTimeout(() => window.location.href = './dashboard.html', 500);
-          } else {
-            setTimeout(() => window.location.href = './login.html', 500);
-          }
+          saveAuthSession(res.data, res.data?.token, 'DELIVERY_MAN');
+          setAlert('✅ Rider account created! You are now logged in. Loading hub...', 'success');
+          showToast('Welcome to the fleet! Loading Rider Hub...', 'success');
+          setTimeout(() => {
+            window.location.href = './dashboard.html';
+          }, 300);
         } else {
-          showToast(res.message || 'Registration failed', 'error');
+          const err = res.message || 'Registration failed';
+          setAlert(`❌ ${err}`, 'error');
+          showToast(err, 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Register as Delivery Partner';
         }
-      });
+      } catch (err) {
+        setAlert('❌ Cannot reach backend server. Please verify your connection.', 'error');
+        showToast('Backend connection failed', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register as Delivery Partner';
+      }
+    });
+
+    renderNavbar();
+    checkAuth('DELIVERY_MAN').then(user => {
+      if (user && user.role === 'DELIVERY_MAN') {
+        window.location.href = './dashboard.html';
+      }
+    }).catch(err => {
+      console.debug('Background checkAuth error:', err);
     });
   </script>
 </body>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,105 +11,184 @@
   <div id="navbar-container"></div>
 
   <div class="container container-sm" style="margin-top: 40px; margin-bottom: 60px;">
-    <div class="form-card">
-      <div style="text-align: center; margin-bottom: 28px;">
-        <div style="font-size: 2.2rem; margin-bottom: 8px;">🎉</div>
-        <h2 style="font-size: 1.8rem;">Create Your Account</h2>
+    <div class="form-card" style="box-shadow: var(--shadow-lg); border: 1px solid rgba(255,107,0,0.15);">
+      
+      <!-- Swiggy-Style Tab Navigation -->
+      <div style="display: flex; border-bottom: 2px solid var(--border); margin-bottom: 28px;">
+        <a href="./login.html" style="flex: 1; text-align: center; padding: 12px 0; font-weight: 600; font-size: 1.05rem; color: var(--text-muted);">
+          Log In
+        </a>
+        <a href="./register.html" style="flex: 1; text-align: center; padding: 12px 0; font-weight: 700; font-size: 1.05rem; color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px;">
+          Sign Up
+        </a>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 2.2rem; margin-bottom: 6px;">🎉</div>
+        <h2 style="font-size: 1.7rem; font-weight: 800;">Create Your Account</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
-          Join AdvanceFoodnest for seamless food ordering and live deliveries.
+          Join AdvanceFoodnest for fast 30-min deliveries and real-time tracking.
         </p>
       </div>
+
+      <!-- Live Auth Alert Banner -->
+      <div id="auth-alert" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4;"></div>
 
       <form id="customer-register-form">
         <div class="form-group">
           <label class="form-label" for="fullName">Full Name</label>
-          <input type="text" id="fullName" class="form-input" placeholder="e.g. Maya Krishnan" required minlength="2">
+          <input type="text" id="fullName" class="form-input" placeholder="e.g. Maya Krishnan" required minlength="2" autocomplete="name">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div class="form-group">
             <label class="form-label" for="email">Email Address</label>
-            <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
+            <input type="email" id="email" class="form-input" placeholder="name@example.com" required autocomplete="email">
           </div>
           <div class="form-group">
             <label class="form-label" for="phone">Phone Number</label>
-            <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543212" required minlength="7">
+            <input type="tel" id="phone" class="form-input" placeholder="e.g. 9876543212" required minlength="7" autocomplete="tel">
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="password">Password (min. 6 characters)</label>
-          <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6">
+          <input type="password" id="password" class="form-input" placeholder="••••••••" required minlength="6" autocomplete="new-password">
         </div>
 
         <div class="form-group">
           <label class="form-label" for="address">Delivery Address</label>
-          <textarea id="address" class="form-textarea" rows="3" placeholder="Apartment / Suite, Building, Street, City" required></textarea>
+          <textarea id="address" class="form-textarea" rows="3" placeholder="Apartment / Suite, Building, Street, City" required autocomplete="street-address"></textarea>
         </div>
 
-        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
-          Create Customer Account
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px; font-weight: 700;">
+          Create Account & Log In
         </button>
       </form>
 
       <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        Already have an account? <a href="./login.html" style="color: var(--primary); font-weight: 600;">Sign in</a>
+        Already have an account? <a href="./login.html" id="login-link" style="color: var(--primary); font-weight: 700;">Sign in here &rarr;</a>
       </div>
     </div>
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
-    import { apiRequest } from '../shared/js/api.js';
+    import { checkAuth, saveAuthSession, renderNavbar } from '../shared/js/auth.js';
+    import { apiRequest, getCartTotalCount } from '../shared/js/api.js';
     import { showToast } from '../shared/js/toast.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      if (user && user.role === 'CUSTOMER') {
-        window.location.href = './dashboard.html';
+    function setAlert(message, type = 'error') {
+      const alert = document.getElementById('auth-alert');
+      if (!alert) return;
+      if (!message) {
+        alert.style.display = 'none';
         return;
       }
-      renderNavbar();
+      alert.style.display = 'block';
+      if (type === 'error') {
+        alert.style.background = '#FEE2E2';
+        alert.style.border = '1px solid #FCA5A5';
+        alert.style.color = '#991B1B';
+      } else if (type === 'success') {
+        alert.style.background = '#DCFCE7';
+        alert.style.border = '1px solid #86EFAC';
+        alert.style.color = '#166534';
+      }
+      alert.innerHTML = message;
+    }
 
-      const form = document.getElementById('customer-register-form');
-      const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('customer-register-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const emailInput = document.getElementById('email');
+    const fullNameInput = document.getElementById('fullName');
+    const phoneInput = document.getElementById('phone');
+    const addressInput = document.getElementById('address');
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Creating account...';
+    // Auto-fill email and derived name from URL query param if present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('email')) {
+      const emailVal = urlParams.get('email');
+      emailInput.value = emailVal;
+      const prefix = emailVal.split('@')[0];
+      if (prefix && !fullNameInput.value) {
+        fullNameInput.value = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+      }
+    }
 
-        const payload = {
-          fullName: document.getElementById('fullName').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          password: document.getElementById('password').value,
-          address: document.getElementById('address').value.trim()
-        };
+    // Keep Login links updated with typed email
+    function updateLoginLinks() {
+      const email = encodeURIComponent(emailInput.value.trim());
+      const query = email ? `?email=${email}` : '';
+      const loginLink = document.getElementById('login-link');
+      if (loginLink) loginLink.href = `./login.html${query}`;
+      const tabLinks = document.querySelectorAll('a[href*="login.html"]');
+      tabLinks.forEach(a => a.href = `./login.html${query}`);
+    }
+    emailInput.addEventListener('input', updateLoginLinks);
 
+    // Attach submit listener synchronously
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setAlert('', '');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account & logging in...';
+
+      const payload = {
+        fullName: fullNameInput.value.trim(),
+        email: emailInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        password: document.getElementById('password').value,
+        address: addressInput.value.trim()
+      };
+
+      try {
         const res = await apiRequest('/auth/customer/register', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
 
         if (res.success) {
-          showToast('Account created! Logging you in...', 'success');
-          // Auto login
-          const loginRes = await apiRequest('/auth/customer/login', {
-            method: 'POST',
-            body: JSON.stringify({ email: payload.email, password: payload.password })
-          });
-          if (loginRes.success) {
-            setTimeout(() => window.location.href = './dashboard.html', 500);
-          } else {
-            setTimeout(() => window.location.href = './login.html', 500);
+          saveAuthSession(res.data, res.data?.token, 'CUSTOMER');
+          setAlert('✅ Account created successfully! You are now logged in. Redirecting...', 'success');
+          showToast(`Welcome to AdvanceFoodnest, ${res.data?.fullName || 'Foodie'}!`, 'success');
+          
+          let target = './dashboard.html';
+          try {
+            const cartItems = getCartTotalCount();
+            if (cartItems > 0) target = './cart.html';
+          } catch (e) {
+            console.debug('Cart check bypassed:', e);
           }
+
+          setTimeout(() => {
+            window.location.href = target;
+          }, 300);
+          return;
         } else {
-          showToast(res.message || 'Registration failed', 'error');
+          const err = res.message || 'Registration failed';
+          setAlert(`❌ ${err}`, 'error');
+          showToast(err, 'error');
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Create Customer Account';
+          submitBtn.textContent = 'Create Account & Log In';
         }
-      });
+      } catch (err) {
+        console.error('Registration processing error:', err);
+        setAlert(`❌ Registration encountered an error: ${err.message || 'Please check connection.'}`, 'error');
+        showToast('Registration error', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account & Log In';
+      }
+    });
+
+    // Render navbar & background auth check
+    renderNavbar();
+    checkAuth().then(user => {
+      if (user && user.role === 'CUSTOMER') {
+        window.location.href = './dashboard.html';
+      }
+    }).catch(err => {
+      console.debug('Background checkAuth error:', err);
     });
   </script>
 </body>

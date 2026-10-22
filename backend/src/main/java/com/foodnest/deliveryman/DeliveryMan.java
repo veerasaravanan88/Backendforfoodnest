@@ -27,7 +27,16 @@ public class DeliveryMan {
     private String vehicleType = "BIKE";
 
     @Column(nullable = false)
-    private Boolean isAvailable = true;
+    private Boolean isAvailable = false;
+
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
+    @Column
+    private LocalDateTime lastActiveAt;
 
     @Column(nullable = false, length = 20)
     private String accountStatus = "ACTIVE";
@@ -122,5 +131,29 @@ public class DeliveryMan {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public LocalDateTime getLastActiveAt() {
+        return lastActiveAt;
+    }
+
+    public void setLastActiveAt(LocalDateTime lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
     }
 }

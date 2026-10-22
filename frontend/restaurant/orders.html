@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -138,10 +138,10 @@
               <span class="status-badge status-accepted" style="font-size: 0.7rem; margin-left: auto;">${o.deliveryAssignment.status}</span>
             </div>
           `;
-        } else if (o.status === 'READY') {
+        } else if (o.status === 'READY' || o.status === 'ACCEPTED' || o.status === 'PREPARING') {
           riderBadge = `
             <div style="background: var(--warning-light); color: var(--warning); padding: 8px 14px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; margin-top: 12px;">
-              ⚠️ Auto-dispatching available delivery partner...
+              🛵 Searching nearby online delivery partners...
             </div>
           `;
         }

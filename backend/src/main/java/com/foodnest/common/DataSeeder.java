@@ -57,6 +57,8 @@ public class DataSeeder implements CommandLineRunner {
             fastfoods.setCuisineType("Burgers & Fast Food");
             fastfoods.setImageUrl("https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800");
             fastfoods.setRating(new BigDecimal("4.8"));
+            fastfoods.setLatitude(12.9756);
+            fastfoods.setLongitude(77.6066);
             fastfoods.setAccountStatus("ACTIVE");
             Restaurant savedFastfoods = restaurantRepository.save(fastfoods);
 
@@ -76,13 +78,15 @@ public class DataSeeder implements CommandLineRunner {
             foodies.setCuisineType("Biryani & Mughlai");
             foodies.setImageUrl("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800");
             foodies.setRating(new BigDecimal("4.9"));
+            foodies.setLatitude(12.9716);
+            foodies.setLongitude(77.6085);
             foodies.setAccountStatus("ACTIVE");
             Restaurant savedFoodies = restaurantRepository.save(foodies);
 
             createDish(savedFoodies, "Mutton Fry", "Tender young mutton slow-cooked with roasted spices, garlic, and cracked pepper.", "Starters", new BigDecimal("299.00"), 35, "https://images.unsplash.com/photo-1544025162-d76694265947?w=600");
             createDish(savedFoodies, "Hyderabadi Chicken Biryani", "Fragrant long-grain basmati rice layered with succulent spiced chicken and saffron.", "Biryani", new BigDecimal("280.00"), 75, "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600");
             createDish(savedFoodies, "Royal Mutton Dum Biryani", "Classic slow-dum cooked goat mutton biryani with caramelized onions and whole spices.", "Biryani", new BigDecimal("380.00"), 45, "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=600");
-            createDish(savedFoodies, "Garlic Butter Naan", "Tandoor baked leavened flatbread brushed with garlic butter and fresh cilantro.", "Breads", new BigDecimal("50.00"), 120, "https://images.unsplash.com/photo-1584947897642-8326a26cf6f9?w=600");
+            createDish(savedFoodies, "Garlic Butter Naan", "Tandoor baked leavened flatbread brushed with garlic butter and fresh cilantro.", "Breads", new BigDecimal("50.00"), 120, "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=600");
 
             // 3. Restaurant SpiceGarden
             Restaurant spiceGarden = new Restaurant();
@@ -95,6 +99,8 @@ public class DataSeeder implements CommandLineRunner {
             spiceGarden.setCuisineType("South Indian & Pure Veg");
             spiceGarden.setImageUrl("https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800");
             spiceGarden.setRating(new BigDecimal("4.7"));
+            spiceGarden.setLatitude(12.9784);
+            spiceGarden.setLongitude(77.6408);
             spiceGarden.setAccountStatus("ACTIVE");
             Restaurant savedSpiceGarden = restaurantRepository.save(spiceGarden);
 
@@ -120,14 +126,14 @@ public class DataSeeder implements CommandLineRunner {
             c2.setAddress("Villa 12, Palm Meadows, Whitefield, Bengaluru");
             customerRepository.save(c2);
 
-            // 5. Default Delivery Partners
+            // 5. Default Delivery Partners (offline by default until they log in and toggle online)
             DeliveryMan d1 = new DeliveryMan();
             d1.setFullName("David Vance");
             d1.setEmail("rider1@foodnest.com");
             d1.setPhone("9876543210");
             d1.setPasswordHash(defaultHash);
             d1.setVehicleType("Honda Activa");
-            d1.setIsAvailable(true);
+            d1.setIsAvailable(false);
             d1.setAccountStatus("ACTIVE");
             deliveryManRepository.save(d1);
 
@@ -137,7 +143,7 @@ public class DataSeeder implements CommandLineRunner {
             d2.setPhone("9876543211");
             d2.setPasswordHash(defaultHash);
             d2.setVehicleType("Yamaha FZ");
-            d2.setIsAvailable(true);
+            d2.setIsAvailable(false);
             d2.setAccountStatus("ACTIVE");
             deliveryManRepository.save(d2);
 

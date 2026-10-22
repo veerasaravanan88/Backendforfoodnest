@@ -29,112 +29,194 @@ public class AuthService {
     private final DeliveryManRepository deliveryManRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService userDetailsService;
+    private final com.foodnest.security.TokenAuthService tokenAuthService;
 
     public AuthService(CustomerRepository customerRepository,
                        RestaurantRepository restaurantRepository,
                        DeliveryManRepository deliveryManRepository,
                        PasswordEncoder passwordEncoder,
                        CustomUserDetailsService userDetailsService) {
+        this(customerRepository, restaurantRepository, deliveryManRepository, passwordEncoder, userDetailsService, new com.foodnest.security.TokenAuthService(restaurantRepository, customerRepository, deliveryManRepository));
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AuthService(CustomerRepository customerRepository,
+                       RestaurantRepository restaurantRepository,
+                       DeliveryManRepository deliveryManRepository,
+                       PasswordEncoder passwordEncoder,
+                       CustomUserDetailsService userDetailsService,
+                       com.foodnest.security.TokenAuthService tokenAuthService) {
         this.customerRepository = customerRepository;
         this.restaurantRepository = restaurantRepository;
         this.deliveryManRepository = deliveryManRepository;
         this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
+        this.tokenAuthService = tokenAuthService;
+    }
+
+    private void establishSession(UserPrincipal principal, HttpServletRequest request) {
+        if (request != null) {
+            HttpSession existingSession = request.getSession(false);
+            if (existingSession != null) {
+                try {
+                    existingSession.invalidate();
+                } catch (Exception ignored) {
+                }
+            }
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        }
     }
 
     @Transactional
     public UserSummaryResponse registerCustomer(CustomerRegisterRequest req) {
-        if (customerRepository.existsByEmail(req.getEmail())) {
+        return registerCustomer(req, null);
+    }
+
+    @Transactional
+    public UserSummaryResponse registerCustomer(CustomerRegisterRequest req, HttpServletRequest request) {
+        String normalizedEmail = req.getEmail().toLowerCase().trim();
+        if (customerRepository.existsByEmail(normalizedEmail)) {
             throw new BadRequestException("An account with email " + req.getEmail() + " already exists.");
         }
-        if (customerRepository.existsByPhone(req.getPhone())) {
-            throw new BadRequestException("An account with phone " + req.getPhone() + " already exists.");
+        String phone = req.getPhone() != null && !req.getPhone().isBlank() ? req.getPhone().trim() : null;
+        if (phone != null && customerRepository.existsByPhone(phone)) {
+            throw new BadRequestException("An account with phone " + phone + " already exists.");
         }
 
         Customer customer = new Customer();
-        customer.setFullName(req.getFullName());
-        customer.setEmail(req.getEmail().toLowerCase().trim());
-        customer.setPhone(req.getPhone().trim());
+        customer.setFullName(req.getFullName().trim());
+        customer.setEmail(normalizedEmail);
+        customer.setPhone(phone);
         customer.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        customer.setAddress(req.getAddress());
+        customer.setAddress(req.getAddress() != null && !req.getAddress().isBlank() ? req.getAddress().trim() : "");
 
         Customer saved = customerRepository.save(customer);
 
+        UserPrincipal principal = new UserPrincipal(saved.getId(), saved.getEmail(), saved.getPasswordHash(), saved.getFullName(), UserRole.CUSTOMER);
+        establishSession(principal, request);
+
+        String token = tokenAuthService.generateToken(principal);
         UserSummaryResponse response = new UserSummaryResponse(saved.getId(), saved.getEmail(), saved.getFullName(), UserRole.CUSTOMER);
         response.setPhone(saved.getPhone());
         response.setAddress(saved.getAddress());
+        response.setToken(token);
         return response;
     }
 
     @Transactional
     public UserSummaryResponse registerRestaurant(RestaurantRegisterRequest req) {
-        if (restaurantRepository.existsByEmail(req.getEmail())) {
-            throw new BadRequestException("A restaurant account with email " + req.getEmail() + " already exists.");
-        }
+        return registerRestaurant(req, null);
+    }
 
-        Restaurant restaurant = new Restaurant();
-        restaurant.setName(req.getName());
-        restaurant.setOwnerName(req.getOwnerName());
-        restaurant.setEmail(req.getEmail().toLowerCase().trim());
-        restaurant.setPhone(req.getPhone().trim());
-        restaurant.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        restaurant.setAddress(req.getAddress());
-        restaurant.setCuisineType(req.getCuisineType() != null ? req.getCuisineType() : "Multi-Cuisine");
-        restaurant.setImageUrl(req.getImageUrl());
-        restaurant.setAccountStatus("ACTIVE");
+    @Transactional
+    public UserSummaryResponse registerRestaurant(RestaurantRegisterRequest req, HttpServletRequest request) {
+        String normalizedEmail = req.getEmail().toLowerCase().trim();
+        java.util.Optional<Restaurant> existingOpt = restaurantRepository.findByEmail(normalizedEmail);
+        Restaurant restaurant;
+        if (existingOpt.isPresent()) {
+            restaurant = existingOpt.get();
+            if (req.getName() != null && !req.getName().isBlank()) restaurant.setName(req.getName().trim());
+            if (req.getOwnerName() != null && !req.getOwnerName().isBlank()) restaurant.setOwnerName(req.getOwnerName().trim());
+            if (req.getPhone() != null && !req.getPhone().isBlank()) restaurant.setPhone(req.getPhone().trim());
+            if (req.getAddress() != null && !req.getAddress().isBlank()) restaurant.setAddress(req.getAddress().trim());
+            if (req.getCuisineType() != null && !req.getCuisineType().isBlank()) restaurant.setCuisineType(req.getCuisineType().trim());
+            if (req.getImageUrl() != null && !req.getImageUrl().isBlank()) restaurant.setImageUrl(req.getImageUrl().trim());
+            restaurant.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+            restaurant.setAccountStatus("ACTIVE");
+        } else {
+            restaurant = new Restaurant();
+            restaurant.setName(req.getName());
+            restaurant.setOwnerName(req.getOwnerName());
+            restaurant.setEmail(normalizedEmail);
+            restaurant.setPhone(req.getPhone().trim());
+            restaurant.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+            restaurant.setAddress(req.getAddress());
+            restaurant.setCuisineType(req.getCuisineType() != null ? req.getCuisineType() : "Multi-Cuisine");
+            restaurant.setImageUrl(req.getImageUrl() != null && !req.getImageUrl().isBlank() ? req.getImageUrl() : "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800");
+            restaurant.setAccountStatus("ACTIVE");
+        }
 
         Restaurant saved = restaurantRepository.save(restaurant);
 
+        UserPrincipal principal = new UserPrincipal(saved.getId(), saved.getEmail(), saved.getPasswordHash(), saved.getName(), UserRole.RESTAURANT);
+        establishSession(principal, request);
+
+        String token = tokenAuthService.generateToken(principal);
         UserSummaryResponse response = new UserSummaryResponse(saved.getId(), saved.getEmail(), saved.getName(), UserRole.RESTAURANT);
         response.setPhone(saved.getPhone());
         response.setAddress(saved.getAddress());
+        response.setToken(token);
         return response;
     }
 
     @Transactional
     public UserSummaryResponse registerDeliveryMan(DeliveryManRegisterRequest req) {
-        if (deliveryManRepository.existsByEmail(req.getEmail())) {
-            throw new BadRequestException("A delivery partner account with email " + req.getEmail() + " already exists.");
-        }
-        if (deliveryManRepository.existsByPhone(req.getPhone())) {
-            throw new BadRequestException("A delivery partner account with phone " + req.getPhone() + " already exists.");
-        }
+        return registerDeliveryMan(req, null);
+    }
 
-        DeliveryMan deliveryMan = new DeliveryMan();
-        deliveryMan.setFullName(req.getFullName());
-        deliveryMan.setEmail(req.getEmail().toLowerCase().trim());
-        deliveryMan.setPhone(req.getPhone().trim());
-        deliveryMan.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-        deliveryMan.setVehicleType(req.getVehicleType() != null ? req.getVehicleType() : "BIKE");
-        deliveryMan.setIsAvailable(true);
-        deliveryMan.setAccountStatus("ACTIVE");
+    @Transactional
+    public UserSummaryResponse registerDeliveryMan(DeliveryManRegisterRequest req, HttpServletRequest request) {
+        String normalizedEmail = req.getEmail().toLowerCase().trim();
+        java.util.Optional<DeliveryMan> existingOpt = deliveryManRepository.findByEmail(normalizedEmail);
+        DeliveryMan deliveryMan;
+        if (existingOpt.isPresent()) {
+            deliveryMan = existingOpt.get();
+            if (req.getFullName() != null && !req.getFullName().isBlank()) deliveryMan.setFullName(req.getFullName().trim());
+            if (req.getPhone() != null && !req.getPhone().isBlank()) deliveryMan.setPhone(req.getPhone().trim());
+            if (req.getVehicleType() != null && !req.getVehicleType().isBlank()) deliveryMan.setVehicleType(req.getVehicleType().trim());
+            deliveryMan.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+            deliveryMan.setIsAvailable(true);
+            deliveryMan.setAccountStatus("ACTIVE");
+        } else {
+            deliveryMan = new DeliveryMan();
+            deliveryMan.setFullName(req.getFullName());
+            deliveryMan.setEmail(normalizedEmail);
+            String phone = req.getPhone() != null && !req.getPhone().isBlank() ? req.getPhone().trim() : "9876543290";
+            if (deliveryManRepository.existsByPhone(phone)) {
+                phone = phone.length() > 8 ? phone.substring(0, 8) + (int)(Math.random() * 90 + 10) : phone + (int)(Math.random() * 90 + 10);
+            }
+            deliveryMan.setPhone(phone);
+            deliveryMan.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+            deliveryMan.setVehicleType(req.getVehicleType() != null ? req.getVehicleType() : "BIKE");
+            deliveryMan.setIsAvailable(true);
+            deliveryMan.setAccountStatus("ACTIVE");
+        }
 
         DeliveryMan saved = deliveryManRepository.save(deliveryMan);
 
+        UserPrincipal principal = new UserPrincipal(saved.getId(), saved.getEmail(), saved.getPasswordHash(), saved.getFullName(), UserRole.DELIVERY_MAN);
+        establishSession(principal, request);
+
+        String token = tokenAuthService.generateToken(principal);
         UserSummaryResponse response = new UserSummaryResponse(saved.getId(), saved.getEmail(), saved.getFullName(), UserRole.DELIVERY_MAN);
         response.setPhone(saved.getPhone());
+        response.setToken(token);
         return response;
     }
 
     public UserSummaryResponse login(UserRole expectedRole, String email, String password, HttpServletRequest request) {
-        UserPrincipal principal = userDetailsService.loadByRoleAndEmail(expectedRole, email.toLowerCase().trim());
+        String normalizedEmail = email.toLowerCase().trim();
+
+        UserPrincipal principal = userDetailsService.loadByRoleAndEmail(expectedRole, normalizedEmail);
 
         if (!passwordEncoder.matches(password, principal.getPassword())) {
-            throw new BadCredentialsException("Invalid password provided.");
+            throw new BadCredentialsException("Invalid password provided for " + email + ". Please check your password.");
         }
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        establishSession(principal, request);
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-
-        HttpSession session = request.getSession(true);
-        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-
+        String token = tokenAuthService.generateToken(principal);
         UserSummaryResponse response = new UserSummaryResponse(
                 principal.getId(), principal.getUsername(), principal.getFullName(), principal.getRole());
+        response.setToken(token);
 
         // Fill extra profile details
         if (expectedRole == UserRole.CUSTOMER) {
@@ -150,6 +232,8 @@ public class AuthService {
         } else if (expectedRole == UserRole.DELIVERY_MAN) {
             deliveryManRepository.findById(principal.getId()).ifPresent(d -> {
                 response.setPhone(d.getPhone());
+                d.setLastActiveAt(java.time.LocalDateTime.now());
+                deliveryManRepository.save(d);
             });
         }
 

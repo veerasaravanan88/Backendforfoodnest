@@ -175,6 +175,98 @@
     </div>
   </section>
 
+  <!-- Popular Dishes Section (Instant Add to Cart) -->
+  <section style="padding: 50px 0 60px; background: #FAFAFA; border-bottom: 1px solid var(--border);">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <span class="hero-pill" style="margin-bottom: 8px;">Order Directly</span>
+          <h2 style="font-size: 2rem;">Trending Dishes</h2>
+        </div>
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Click "Add to Cart" to start your order instantly ⚡</span>
+      </div>
+
+      <div class="grid-dishes" id="trending-dishes-grid">
+        <!-- Pre-rendered instant dishes -->
+        <div class="card">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600" alt="Chicken Fry" class="card-img">
+            <span class="card-badge">Fastfoods</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Chicken Fry</h3>
+            <p class="card-subtitle" style="font-size: 0.82rem; height: 38px; overflow: hidden; text-overflow: ellipsis;">
+              Golden-crisp marinated spiced fried chicken pieces served with spicy dip.
+            </p>
+            <div class="card-footer">
+              <span class="dish-price">₹199</span>
+              <button class="btn btn-primary btn-sm quick-add-btn" data-id="1" data-dish='{"id":1,"dishId":1,"name":"Chicken Fry","price":199,"restaurantId":1,"restaurantName":"Fastfoods","imageUrl":"https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600"}'>
+                Add to Cart 🛒
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600" alt="Crispy Chicken Burger" class="card-img">
+            <span class="card-badge">Fastfoods</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Crispy Chicken Burger</h3>
+            <p class="card-subtitle" style="font-size: 0.82rem; height: 38px; overflow: hidden; text-overflow: ellipsis;">
+              Juicy fried chicken patty with lettuce, tomatoes, melted cheese and special sauce.
+            </p>
+            <div class="card-footer">
+              <span class="dish-price">₹159</span>
+              <button class="btn btn-primary btn-sm quick-add-btn" data-id="3" data-dish='{"id":3,"dishId":3,"name":"Crispy Chicken Burger","price":159,"restaurantId":1,"restaurantName":"Fastfoods","imageUrl":"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600"}'>
+                Add to Cart 🛒
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600" alt="Hyderabadi Chicken Biryani" class="card-img">
+            <span class="card-badge">Foodies</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Hyderabadi Chicken Biryani</h3>
+            <p class="card-subtitle" style="font-size: 0.82rem; height: 38px; overflow: hidden; text-overflow: ellipsis;">
+              Fragrant long-grain basmati rice layered with succulent spiced chicken and saffron.
+            </p>
+            <div class="card-footer">
+              <span class="dish-price">₹280</span>
+              <button class="btn btn-primary btn-sm quick-add-btn" data-id="6" data-dish='{"id":6,"dishId":6,"name":"Hyderabadi Chicken Biryani","price":280,"restaurantId":2,"restaurantName":"Foodies","imageUrl":"https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600"}'>
+                Add to Cart 🛒
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-img-wrap">
+            <img src="https://images.unsplash.com/photo-1576107232684-1279f3908594?w=600" alt="Peri Peri French Fries" class="card-img">
+            <span class="card-badge">Fastfoods</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">Peri Peri French Fries</h3>
+            <p class="card-subtitle" style="font-size: 0.82rem; height: 38px; overflow: hidden; text-overflow: ellipsis;">
+              Freshly fried potato strips tossed in fiery African peri peri seasoning.
+            </p>
+            <div class="card-footer">
+              <span class="dish-price">₹99</span>
+              <button class="btn btn-primary btn-sm quick-add-btn" data-id="4" data-dish='{"id":4,"dishId":4,"name":"Peri Peri French Fries","price":99,"restaurantId":1,"restaurantName":"Fastfoods","imageUrl":"https://images.unsplash.com/photo-1576107232684-1279f3908594?w=600"}'>
+                Add to Cart 🛒
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Multi-Role Portals Section -->
   <section style="padding: 60px 0; background: var(--gray-bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
     <div class="container">
@@ -301,7 +393,7 @@
 
   <script type="module">
     import { checkAuth, renderNavbar, getBaseUrl } from './shared/js/auth.js';
-    import { apiRequest, getCartTotalCount } from './shared/js/api.js';
+    import { apiRequest, getCartTotalCount, addToCart } from './shared/js/api.js';
 
     // Synchronous immediate render
     renderNavbar('home');
@@ -314,14 +406,63 @@
       cartBadge.style.display = c > 0 ? 'flex' : 'none';
     }
 
+    // In-memory dish registry for instant quick add
+    const dishRegistry = new Map([
+      [1, { id: 1, dishId: 1, name: "Chicken Fry", price: 199, restaurantId: 1, restaurantName: "Fastfoods", imageUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600" }],
+      [3, { id: 3, dishId: 3, name: "Crispy Chicken Burger", price: 159, restaurantId: 1, restaurantName: "Fastfoods", imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600" }],
+      [6, { id: 6, dishId: 6, name: "Hyderabadi Chicken Biryani", price: 280, restaurantId: 2, restaurantName: "Foodies", imageUrl: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600" }],
+      [4, { id: 4, dishId: 4, name: "Peri Peri French Fries", price: 99, restaurantId: 1, restaurantName: "Fastfoods", imageUrl: "https://images.unsplash.com/photo-1576107232684-1279f3908594?w=600" }]
+    ]);
+
+    // Attach listeners to quick add buttons
+    function attachQuickAddHandlers() {
+      document.querySelectorAll('.quick-add-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          try {
+            const id = parseInt(btn.dataset.id);
+            let dish = dishRegistry.get(id);
+            if (!dish && btn.dataset.dish) {
+              dish = JSON.parse(btn.dataset.dish);
+            }
+            if (!dish) return;
+
+            const added = addToCart(dish, 1);
+            if (added) {
+              const origText = btn.innerHTML;
+              btn.innerHTML = '✓ Added!';
+              btn.style.backgroundColor = '#10B981';
+              btn.style.borderColor = '#10B981';
+              btn.style.color = '#FFFFFF';
+              btn.disabled = true;
+
+              setTimeout(() => {
+                btn.innerHTML = origText;
+                btn.style.backgroundColor = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+                btn.disabled = false;
+              }, 1000);
+            }
+          } catch (err) {
+            console.error('Failed to quick-add dish:', err);
+          }
+        };
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       // Async auth check in background
       checkAuth().then(user => {
         if (user) renderNavbar('home');
       });
 
-      // Load live restaurants from API
+      // Attach initial quick add handlers
+      attachQuickAddHandlers();
+
+      // Load live restaurants and dishes from API
       loadFeaturedRestaurants();
+      loadLiveTrendingDishes();
 
       // Category click handlers
       document.querySelectorAll('.category-chip').forEach(chip => {
@@ -332,6 +473,63 @@
         });
       });
     });
+
+    async function loadLiveTrendingDishes() {
+      try {
+        const [m1, m2] = await Promise.allSettled([
+          apiRequest('/restaurants/1/menu'),
+          apiRequest('/restaurants/2/menu')
+        ]);
+
+        const dishes = [];
+        if (m1.status === 'fulfilled' && m1.value.success && Array.isArray(m1.value.data)) {
+          dishes.push(...m1.value.data.slice(0, 3));
+        }
+        if (m2.status === 'fulfilled' && m2.value.success && Array.isArray(m2.value.data)) {
+          dishes.push(...m2.value.data.slice(0, 3));
+        }
+
+        if (dishes.length === 0) return; // Keep pre-rendered cards
+
+        dishes.forEach(d => {
+          dishRegistry.set(d.id, {
+            id: d.id,
+            dishId: d.id,
+            name: d.name,
+            price: d.price,
+            restaurantId: d.restaurantId,
+            restaurantName: d.restaurantName,
+            imageUrl: d.imageUrl
+          });
+        });
+
+        const grid = document.getElementById('trending-dishes-grid');
+        grid.innerHTML = dishes.map(d => `
+          <div class="card">
+            <div class="card-img-wrap">
+              <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" alt="${d.name}" class="card-img">
+              <span class="card-badge">${d.restaurantName || d.category}</span>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">${d.name}</h3>
+              <p class="card-subtitle" style="font-size: 0.82rem; height: 38px; overflow: hidden; text-overflow: ellipsis;">
+                ${d.description || 'Deliciously prepared with top quality ingredients.'}
+              </p>
+              <div class="card-footer">
+                <span class="dish-price">₹${d.price}</span>
+                <button class="btn btn-primary btn-sm quick-add-btn" data-id="${d.id}">
+                  Add to Cart 🛒
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        attachQuickAddHandlers();
+      } catch (err) {
+        console.debug('Using pre-rendered trending dishes:', err);
+      }
+    }
 
     async function loadFeaturedRestaurants() {
       const grid = document.getElementById('restaurants-grid');

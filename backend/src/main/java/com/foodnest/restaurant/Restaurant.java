@@ -39,6 +39,12 @@ public class Restaurant {
     @Column(nullable = false, precision = 2, scale = 1)
     private BigDecimal rating = new BigDecimal("4.5");
 
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
     @Column(nullable = false, length = 20)
     private String accountStatus = "ACTIVE";
 
@@ -156,5 +162,21 @@ public class Restaurant {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

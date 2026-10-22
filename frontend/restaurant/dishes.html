@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -88,8 +88,34 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="dish-image">Image URL</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label class="form-label" for="dish-image" style="margin-bottom: 0;">Image URL</label>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Paste photo link or pick preset below</span>
+            </div>
             <input type="url" id="dish-image" class="form-input" placeholder="https://images.unsplash.com/...">
+
+            <!-- Quick 1-Click Food Presets -->
+            <div style="margin-top: 8px;">
+              <div style="font-size: 0.72rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 4px;">⚡ 1-Click Food Photo Presets:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <button type="button" class="btn btn-outline btn-sm photo-preset-btn" data-url="https://images.unsplash.com/photo-1562967914-608f82629710?w=800" style="font-size: 0.75rem; padding: 4px 8px; background: #FFF;">🍗 Chicken Fry/65</button>
+                <button type="button" class="btn btn-outline btn-sm photo-preset-btn" data-url="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800" style="font-size: 0.75rem; padding: 4px 8px; background: #FFF;">🍛 Biryani</button>
+                <button type="button" class="btn btn-outline btn-sm photo-preset-btn" data-url="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800" style="font-size: 0.75rem; padding: 4px 8px; background: #FFF;">🧀 Paneer Butter</button>
+                <button type="button" class="btn btn-outline btn-sm photo-preset-btn" data-url="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800" style="font-size: 0.75rem; padding: 4px 8px; background: #FFF;">🍔 Burger</button>
+                <button type="button" class="btn btn-outline btn-sm photo-preset-btn" data-url="https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=800" style="font-size: 0.75rem; padding: 4px 8px; background: #FFF;">🍕 Pizza</button>
+                <button type="button" class="btn btn-outline btn-sm photo-preset-btn" data-url="https://images.unsplash.com/photo-1626074353765-517a681e40be?w=800" style="font-size: 0.75rem; padding: 4px 8px; background: #FFF;">🫓 Naan/Roti</button>
+                <button type="button" class="btn btn-outline btn-sm photo-preset-btn" data-url="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800" style="font-size: 0.75rem; padding: 4px 8px; background: #FFF;">🥟 Snacks</button>
+              </div>
+            </div>
+
+            <!-- Live Image Preview -->
+            <div id="dish-image-preview-wrap" style="margin-top: 10px; display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-md);">
+              <img id="dish-image-preview" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600" alt="Preview" style="width: 52px; height: 52px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--border);">
+              <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.3;">
+                <strong style="color: var(--dark);">Live Image Preview</strong><br>
+                <span id="dish-image-status">Select a preset or paste a direct image URL</span>
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -125,7 +151,7 @@
 
     async function loadDishes() {
       // Calls /api/restaurant/me/dishes which strictly returns only authenticated restaurant's dishes
-      const res = await apiRequest('/restaurant/me/dishes');
+      const res = await apiRequest('/restaurant/me/dishes', { role: 'RESTAURANT' });
       const grid = document.getElementById('dishes-grid');
 
       if (!res.success || !res.data) {
@@ -149,7 +175,7 @@
       grid.innerHTML = dishes.map(d => `
         <div class="card">
           <div class="card-img-wrap">
-            <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" alt="${d.name}" class="card-img">
+            <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" alt="${d.name}" class="card-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600';">
             <span class="card-badge">${d.category}</span>
             <span class="status-badge ${d.isAvailable ? 'status-delivered' : 'status-cancelled'}" style="position: absolute; bottom: 12px; right: 12px;">
               ${d.isAvailable ? 'In Stock' : 'Unavailable'}
@@ -189,6 +215,42 @@
       const closeBtn = document.getElementById('modal-close-btn');
       const cancelBtn = document.getElementById('modal-cancel-btn');
       const form = document.getElementById('dish-form');
+      const imageInput = document.getElementById('dish-image');
+      const previewImg = document.getElementById('dish-image-preview');
+      const statusText = document.getElementById('dish-image-status');
+
+      function updateImagePreview(url) {
+        if (!url) {
+          previewImg.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600';
+          statusText.textContent = 'Select a preset or paste a direct image URL';
+          statusText.style.color = 'var(--text-muted)';
+          return;
+        }
+
+        const isHtmlPage = !url.match(/\.(jpeg|jpg|png|webp|gif|svg)(\?.*)?$/i) && !url.includes('images.unsplash.com') && !url.includes('/uploads/') && !url.includes('/images/');
+        if (isHtmlPage && !url.includes('googleusercontent') && !url.includes('cdn')) {
+          statusText.innerHTML = '<span style="color: #EA580C; font-weight: 600;">⚠️ Looks like a webpage link, not a photo!</span><br>Tip: In Google Images, right-click and choose <strong>"Copy image address"</strong>, or pick a preset above.';
+        } else {
+          statusText.innerHTML = '<span style="color: #166534; font-weight: 600;">✓ Direct photo link detected</span>';
+        }
+
+        previewImg.onerror = () => {
+          previewImg.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600';
+          statusText.innerHTML = '<span style="color: #DC2626; font-weight: 600;">✕ Photo failed to load.</span> Use <strong>"Copy image address"</strong> or pick a preset above!';
+        };
+        previewImg.src = url;
+      }
+
+      imageInput?.addEventListener('input', () => updateImagePreview(imageInput.value.trim()));
+
+      document.querySelectorAll('.photo-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (imageInput) {
+            imageInput.value = btn.dataset.url;
+            updateImagePreview(btn.dataset.url);
+          }
+        });
+      });
 
       openBtn.addEventListener('click', () => openAddModal());
       closeBtn.addEventListener('click', () => modal.classList.remove('open'));
@@ -212,12 +274,14 @@
           // Update
           res = await apiRequest(`/restaurant/me/dishes/${dishId}`, {
             method: 'PUT',
+            role: 'RESTAURANT',
             body: JSON.stringify(payload)
           });
         } else {
           // Create
           res = await apiRequest('/restaurant/me/dishes', {
             method: 'POST',
+            role: 'RESTAURANT',
             body: JSON.stringify(payload)
           });
         }
@@ -230,6 +294,8 @@
           showToast(res.message || 'Error saving dish', 'error');
         }
       });
+
+      window._updateDishPreview = updateImagePreview;
     }
 
     window.openAddModal = function() {
@@ -237,6 +303,7 @@
       document.getElementById('dish-id').value = '';
       document.getElementById('dish-form').reset();
       document.getElementById('dish-available').value = 'true';
+      if (window._updateDishPreview) window._updateDishPreview('');
       document.getElementById('dish-modal').classList.add('open');
     };
 
@@ -253,13 +320,14 @@
       document.getElementById('dish-available').value = d.isAvailable ? 'true' : 'false';
       document.getElementById('dish-image').value = d.imageUrl || '';
       document.getElementById('dish-desc').value = d.description || '';
+      if (window._updateDishPreview) window._updateDishPreview(d.imageUrl || '');
 
       document.getElementById('dish-modal').classList.add('open');
     }
 
     async function deleteDish(dishId) {
       if (confirm('Are you sure you want to delete this dish?')) {
-        const res = await apiRequest(`/restaurant/me/dishes/${dishId}`, { method: 'DELETE' });
+        const res = await apiRequest(`/restaurant/me/dishes/${dishId}`, { method: 'DELETE', role: 'RESTAURANT' });
         if (res.success) {
           showToast('Dish deleted successfully', 'info');
           loadDishes();

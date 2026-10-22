@@ -39,10 +39,10 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Access denied: You do not have permission to access this resource."));
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
+    @ExceptionHandler({BadCredentialsException.class, org.springframework.security.core.userdetails.UsernameNotFoundException.class})
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(Exception ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid credentials provided."));
+                .body(ApiResponse.error("Invalid credentials: " + ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

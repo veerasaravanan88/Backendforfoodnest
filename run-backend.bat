@@ -19,6 +19,13 @@ echo  Listening on: http://localhost:8080
 echo  Database: advance_foodnest (PostgreSQL 5432)
 echo ========================================================
 
+:: Check if port 8080 is already held and cleanly free it
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr :8080 ^| findstr LISTENING') do (
+    echo [INFO] Port 8080 is currently held by PID %%a. Cleaning up stale process...
+    taskkill /F /PID %%a >nul 2>&1
+    timeout /t 1 /nobreak >nul
+)
+
 if exist "target\advance-foodnest-1.0.0.jar" (
     java -jar target\advance-foodnest-1.0.0.jar
 ) else (

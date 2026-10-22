@@ -25,7 +25,7 @@ public class CustomerController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<CustomerProfileDto>> getProfile(@AuthenticationPrincipal UserPrincipal principal) {
-        CustomerProfileDto profile = customerService.getProfile(principal.getId());
+        CustomerProfileDto profile = customerService.getProfileByPrincipal(principal);
         return ResponseEntity.ok(ApiResponse.success(profile));
     }
 
@@ -33,13 +33,13 @@ public class CustomerController {
     public ResponseEntity<ApiResponse<CustomerProfileDto>> updateProfile(
             @Valid @RequestBody UpdateCustomerRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        CustomerProfileDto updated = customerService.updateProfile(principal.getId(), request);
+        CustomerProfileDto updated = customerService.updateProfileByPrincipal(principal, request);
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updated));
     }
 
     @GetMapping("/orders")
     public ResponseEntity<ApiResponse<List<OrderDto>>> getMyOrders(@AuthenticationPrincipal UserPrincipal principal) {
-        List<OrderDto> orders = orderService.getCustomerOrders(principal.getId());
+        List<OrderDto> orders = orderService.getCustomerOrdersByPrincipal(principal);
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 
@@ -47,7 +47,7 @@ public class CustomerController {
     public ResponseEntity<ApiResponse<OrderDto>> getMyOrderById(
             @PathVariable Long orderId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        OrderDto order = orderService.getCustomerOrderById(principal.getId(), orderId);
+        OrderDto order = orderService.getOrderByIdForAuthorizedUser(orderId, principal);
         return ResponseEntity.ok(ApiResponse.success(order));
     }
 }

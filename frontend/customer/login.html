@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,41 +11,68 @@
   <div id="navbar-container"></div>
 
   <div class="container container-sm" style="margin-top: 50px; margin-bottom: 60px;">
-    <div class="form-card">
-      <div style="text-align: center; margin-bottom: 28px;">
-        <div style="font-size: 2.2rem; margin-bottom: 8px;">🍽️</div>
-        <h2 style="font-size: 1.8rem;">Customer Sign In</h2>
+    <div class="form-card" style="box-shadow: var(--shadow-lg); border: 1px solid rgba(255,107,0,0.15);">
+      
+      <!-- Swiggy-Style Tab Navigation -->
+      <div style="display: flex; border-bottom: 2px solid var(--border); margin-bottom: 28px;">
+        <a href="./login.html" style="flex: 1; text-align: center; padding: 12px 0; font-weight: 700; font-size: 1.05rem; color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px;">
+          Log In
+        </a>
+        <a href="./register.html" style="flex: 1; text-align: center; padding: 12px 0; font-weight: 600; font-size: 1.05rem; color: var(--text-muted);">
+          Sign Up
+        </a>
+      </div>
+
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 2.2rem; margin-bottom: 6px;">🍽️</div>
+        <h2 style="font-size: 1.7rem; font-weight: 800;">Welcome to AdvanceFoodnest</h2>
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
-          Welcome back! Access your profile, saved cart, and order tracking.
+          Sign in to access your saved cart, address, and live orders.
         </p>
       </div>
 
-      <div style="background: var(--primary-light); border: 1px solid rgba(255,107,0,0.2); padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 24px; font-size: 0.85rem; color: var(--dark);">
-        <strong>Demo Customer Account:</strong><br>
-        Email: <code>customer@foodnest.com</code> | Password: <code>password123</code>
+      <!-- Live Auth Alert Banner -->
+      <div id="auth-alert" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4;"></div>
+
+      <!-- Quick 1-Click Demo Customer Login -->
+      <div style="background: #FFF7ED; border: 1px solid #FFEDD5; border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary);">
+            ⚡ 1-Click Demo Fill & Login
+          </span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Pre-configured test account</span>
+        </div>
+        <button type="button" id="demo-customer-btn" class="btn btn-outline btn-sm btn-full" style="background: #FFF; border-color: #FED7AA; font-weight: 700; color: var(--dark); display: flex; justify-content: space-between; align-items: center; padding: 10px 14px;">
+          <span>👤 Rahul / Maya (customer@foodnest.com)</span>
+          <span style="font-size: 0.75rem; color: var(--primary); font-weight: 600;">Fill & Sign In &rarr;</span>
+        </button>
       </div>
 
       <form id="customer-login-form">
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
-          <input type="email" id="email" class="form-input" placeholder="name@example.com" required value="customer@foodnest.com">
+          <input type="email" id="email" class="form-input" placeholder="e.g. name@example.com" required autocomplete="email">
         </div>
 
         <div class="form-group">
           <label class="form-label" for="password">Password</label>
-          <input type="password" id="password" class="form-input" placeholder="••••••••" required value="password123">
+          <input type="password" id="password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
         </div>
 
-        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
+        <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px; font-weight: 700;">
           Sign In
+        </button>
+
+        <button type="button" id="instant-signup-btn" class="btn btn-outline btn-full btn-md" style="margin-top: 10px; border-color: var(--primary); color: var(--primary); font-weight: 700; background: #FFF9F5;">
+          ✨ New User? Create Account & Sign In
         </button>
       </form>
 
       <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted);">
-        Don't have an account? <a href="./register.html" style="color: var(--primary); font-weight: 600;">Sign up here</a>
+        Don't have an account? <a href="./register.html" id="signup-link" style="color: var(--primary); font-weight: 700;">Create one now &rarr;</a>
       </div>
 
-      <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 0.85rem;">
+      <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--text-muted);">
         Are you a partner?
         <a href="../restaurant/login.html" style="font-weight: 600; color: var(--dark); margin-left: 6px;">Restaurant Login</a> |
         <a href="../deliveryman/login.html" style="font-weight: 600; color: var(--dark); margin-left: 6px;">Rider Login</a>
@@ -54,45 +81,162 @@
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
-    import { apiRequest } from '../shared/js/api.js';
-    import { showToast } from '../shared/js/toast.js';
+    import { checkAuth, saveAuthSession, renderNavbar } from '../shared/js/auth.js?v=2';
+    import { apiRequest, getCartTotalCount } from '../shared/js/api.js?v=2';
+    import { showToast } from '../shared/js/toast.js?v=2';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      if (user && user.role === 'CUSTOMER') {
-        window.location.href = './dashboard.html';
+    function setAlert(message, type = 'error') {
+      const alert = document.getElementById('auth-alert');
+      if (!alert) return;
+      if (!message) {
+        alert.style.display = 'none';
         return;
       }
-      renderNavbar();
+      alert.style.display = 'block';
+      if (type === 'error') {
+        alert.style.background = '#FEE2E2';
+        alert.style.border = '1px solid #FCA5A5';
+        alert.style.color = '#991B1B';
+      } else if (type === 'success') {
+        alert.style.background = '#DCFCE7';
+        alert.style.border = '1px solid #86EFAC';
+        alert.style.color = '#166534';
+      } else {
+        alert.style.background = '#E0F2FE';
+        alert.style.border = '1px solid #BAE6FD';
+        alert.style.color = '#075985';
+      }
+      alert.innerHTML = message;
 
-      const form = document.getElementById('customer-login-form');
-      const submitBtn = document.getElementById('submit-btn');
+      // Attach listener to any dynamic instant signup button inside alert
+      const dynamicBtn = document.getElementById('dynamic-create-btn');
+      if (dynamicBtn) {
+        dynamicBtn.onclick = () => doQuickRegister();
+      }
+    }
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Signing in...';
+    const form = document.getElementById('customer-login-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const instantSignupBtn = document.getElementById('instant-signup-btn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
 
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+    // Pre-fill email from query param if redirected from registration
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('email')) {
+      emailInput.value = urlParams.get('email');
+    }
 
+    // Keep Sign Up links updated with typed email
+    function updateSignupLinks() {
+      const email = encodeURIComponent(emailInput.value.trim());
+      const query = email ? `?email=${email}` : '';
+      const signupLink = document.getElementById('signup-link');
+      if (signupLink) signupLink.href = `./register.html${query}`;
+      const tabLinks = document.querySelectorAll('a[href*="register.html"]');
+      tabLinks.forEach(a => a.href = `./register.html${query}`);
+    }
+    emailInput.addEventListener('input', updateSignupLinks);
+
+    async function doLogin(email, password) {
+      if (!email || !password) {
+        setAlert('Please enter both your email address and password.', 'error');
+        return;
+      }
+
+      setAlert('', '');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+
+      try {
         const res = await apiRequest('/auth/customer/login', {
           method: 'POST',
           body: JSON.stringify({ email, password })
         });
 
         if (res.success) {
-          showToast('Signed in successfully!', 'success');
+          saveAuthSession(res.data, res.data?.token, 'CUSTOMER');
+          setAlert('✅ Signed in successfully! Redirecting...', 'success');
+          showToast(`Welcome back, ${res.data?.fullName || 'User'}!`, 'success');
+          
+          let targetUrl = urlParams.get('redirect') || './dashboard.html';
+          if (!urlParams.get('redirect')) {
+            try {
+              const cartItems = getCartTotalCount();
+              if (cartItems > 0) targetUrl = './cart.html';
+            } catch (e) {
+              console.debug('Cart count check bypassed:', e);
+            }
+          }
+
           setTimeout(() => {
-            window.location.href = './dashboard.html';
-          }, 400);
+            window.location.href = targetUrl;
+          }, 300);
+          return;
         } else {
-          showToast(res.message || 'Login failed', 'error');
+          const err = res.message || 'Login failed. Please verify your credentials.';
+          const helpMsg = `
+            <div style="font-weight: 700; margin-bottom: 6px;">❌ ${err}</div>
+            <div style="font-size: 0.82rem; margin-bottom: 8px;">Don't have an account yet?</div>
+            <a href="./register.html?email=${encodeURIComponent(email)}" class="btn btn-primary btn-sm btn-full" style="font-weight: 700; display: block; text-align: center; text-decoration: none;">
+              ✨ Create an Account for ${email}
+            </a>
+          `;
+          setAlert(helpMsg, 'error');
+          showToast(err, 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Sign In';
         }
-      });
+      } catch (err) {
+        console.error('Customer login network error:', err);
+        setAlert('❌ Cannot reach backend server. Please verify your connection.', 'error');
+        showToast('Backend connection failed', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+    }
+
+    function doQuickRegister() {
+      const email = emailInput.value.trim();
+      window.location.href = `./register.html${email ? `?email=${encodeURIComponent(email)}` : ''}`;
+    }
+
+    // Attach listeners SYNCHRONOUSLY without awaiting anything!
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      doLogin(email, password);
+    });
+
+    submitBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      doLogin(email, password);
+    });
+
+    instantSignupBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      doQuickRegister();
+    });
+
+    document.getElementById('demo-customer-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      emailInput.value = 'customer@foodnest.com';
+      passwordInput.value = 'password123';
+      doLogin('customer@foodnest.com', 'password123');
+    });
+
+    // Render navbar & background auth check specifically for CUSTOMER session
+    renderNavbar();
+    checkAuth('CUSTOMER').then(user => {
+      if (user && user.role === 'CUSTOMER') {
+        setAlert(`You are already signed in as <strong>${user.fullName || user.email}</strong>. <a href="./dashboard.html" style="text-decoration:underline; font-weight:700;">Go to Dashboard &rarr;</a>`, 'info');
+      }
+    }).catch(err => {
+      console.debug('Background checkAuth error:', err);
     });
   </script>
 </body>

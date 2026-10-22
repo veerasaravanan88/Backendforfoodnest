@@ -53,4 +53,33 @@ public class CustomerService {
                 saved.getCreatedAt()
         );
     }
+
+    @Transactional
+    public Customer getCustomerByPrincipal(com.foodnest.security.UserPrincipal principal) {
+        if (principal == null || principal.getRole() != com.foodnest.security.UserRole.CUSTOMER) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: Customer account required.");
+        }
+        return customerRepository.findById(principal.getId())
+                .orElseGet(() -> customerRepository.findByEmail(principal.getUsername())
+                        .orElseThrow(() -> new ResourceNotFoundException("Customer account not found for: " + principal.getUsername())));
+    }
+
+    @Transactional
+    public CustomerProfileDto getProfileByPrincipal(com.foodnest.security.UserPrincipal principal) {
+        Customer customer = getCustomerByPrincipal(principal);
+        return new CustomerProfileDto(
+                customer.getId(),
+                customer.getFullName(),
+                customer.getEmail(),
+                customer.getPhone(),
+                customer.getAddress(),
+                customer.getCreatedAt()
+        );
+    }
+
+    @Transactional
+    public CustomerProfileDto updateProfileByPrincipal(com.foodnest.security.UserPrincipal principal, UpdateCustomerRequest req) {
+        Customer customer = getCustomerByPrincipal(principal);
+        return updateProfile(customer.getId(), req);
+    }
 }

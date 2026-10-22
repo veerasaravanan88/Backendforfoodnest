@@ -30,11 +30,14 @@ public class SecurityConfig {
 
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
+    private final com.foodnest.security.TokenAuthenticationFilter tokenAuthenticationFilter;
 
     public SecurityConfig(RestAuthenticationEntryPoint authenticationEntryPoint,
-                          RestAccessDeniedHandler accessDeniedHandler) {
+                          RestAccessDeniedHandler accessDeniedHandler,
+                          com.foodnest.security.TokenAuthenticationFilter tokenAuthenticationFilter) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
+        this.tokenAuthenticationFilter = tokenAuthenticationFilter;
     }
 
     @Bean
@@ -54,13 +57,14 @@ public class SecurityConfig {
 
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .addFilterBefore(tokenAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(requestHandler)
                 .ignoringRequestMatchers(
-                    "/api/auth/**",
-                    "/api/cart/**",
-                    "/ws/**"
+                    "/api/**",
+                    "/ws/**",
+                    "/ws-raw/**"
                 )
             )
             .exceptionHandling(exceptions -> exceptions
@@ -75,7 +79,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/restaurants", "/api/restaurants/**").permitAll()
                 .requestMatchers("/api/cart/**").permitAll()
 
-                // Customer-specific endpoints
+                // Customer endpoints strictly restricted to CUSTOMER role
                 .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.POST, "/api/orders/*/cancel").hasRole("CUSTOMER")
@@ -117,10 +121,26 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList(
+        java.util.List<String> origins = new java.util.ArrayList<>(Arrays.asList(
             "http://localhost:[*]",
-            "http://127.0.0.1:[*]"
+            "http://127.0.0.1:[*]",
+            "https://*.railway.app",
+            "https://*.vercel.app",
+            "https://*.netlify.app",
+            "https://*.onrender.com",
+            "https://*.pages.dev",
+            "https://*.github.io"
         ));
+        String envCors = System.getenv("CORS_ALLOWED_ORIGINS");
+        if (envCors != null && !envCors.isBlank()) {
+            for (String orig : envCors.split(",")) {
+                String trimmed = orig.trim();
+                if (!trimmed.isEmpty() && !origins.contains(trimmed)) {
+                    origins.add(trimmed);
+                }
+            }
+        }
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList(
             "Authorization",
@@ -130,9 +150,10 @@ public class SecurityConfig {
             "Origin",
             "Access-Control-Request-Method",
             "Access-Control-Request-Headers",
-            "X-XSRF-TOKEN"
+            "X-XSRF-TOKEN",
+            "X-Auth-Token"
         ));
-        configuration.setExposedHeaders(List.of("X-XSRF-TOKEN"));
+        configuration.setExposedHeaders(List.of("X-XSRF-TOKEN", "X-Auth-Token", "Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

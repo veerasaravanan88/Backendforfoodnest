@@ -24,7 +24,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderDto>> createOrder(
             @Valid @RequestBody CreateOrderRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        OrderDto order = orderService.createOrder(principal.getId(), request);
+        OrderDto order = orderService.createOrder(principal, request);
         return ResponseEntity.ok(ApiResponse.success("Order placed successfully!", order));
     }
 
@@ -42,7 +42,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderDto>> cancelOrder(
             @PathVariable Long orderId,
             @AuthenticationPrincipal UserPrincipal principal) {
-        OrderDto order = orderService.cancelOrderByCustomer(principal.getId(), orderId);
+        OrderDto order = orderService.cancelOrderByPrincipal(principal, orderId);
         return ResponseEntity.ok(ApiResponse.success("Order cancelled successfully.", order));
     }
 

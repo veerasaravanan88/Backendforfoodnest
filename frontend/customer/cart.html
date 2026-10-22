@@ -1,97 +1,320 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Cart — AdvanceFoodnest</title>
   <link rel="stylesheet" href="../shared/css/style.css">
+  <style>
+    /* Checkout Progression Stepper */
+    .checkout-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .step-item.active {
+      color: var(--primary);
+    }
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--gray-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      border: 1px solid var(--border);
+    }
+    .step-item.active .step-number {
+      background: var(--primary);
+      color: #FFF;
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+    .step-divider {
+      width: 40px;
+      height: 2px;
+      background: var(--border);
+    }
+
+    /* Cart Item Card */
+    .cart-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      transition: background 0.2s ease;
+    }
+    .cart-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .cart-qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: #FFF;
+      border: 1.5px solid var(--primary);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(255, 107, 0, 0.15);
+    }
+    .cart-qty-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 1.15rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+      line-height: 1;
+    }
+    .cart-qty-btn:hover {
+      background: var(--primary-light);
+    }
+    .cart-qty-btn:active {
+      transform: scale(0.85);
+    }
+    .cart-qty-val {
+      padding: 0 4px;
+      min-width: 24px;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--dark);
+      animation: qtyBump 0.25s ease;
+    }
+
+    /* Delivery Progress Bar */
+    .free-delivery-bar {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .free-delivery-progress {
+      width: 100%;
+      height: 6px;
+      background: #E5E7EB;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .free-delivery-fill {
+      height: 100%;
+      background: #10B981;
+      border-radius: var(--radius-full);
+      transition: width 0.4s ease;
+    }
+  </style>
 </head>
 <body>
 
   <div id="navbar-container"></div>
 
-  <div class="container" style="padding-top: 40px; padding-bottom: 70px;">
-    <div style="margin-bottom: 28px;">
-      <h1 style="font-size: 2.2rem;">Review Your Cart</h1>
-      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">Live server-calculated pricing, taxes, and delivery fees.</p>
+  <div class="container" style="padding-top: 36px; padding-bottom: 80px;">
+    
+    <!-- Progression Stepper -->
+    <div class="checkout-stepper">
+      <div class="step-item active">
+        <span class="step-number">1</span>
+        <span>Review Cart 🛒</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step-item">
+        <span class="step-number">2</span>
+        <span>Delivery Details 📍</span>
+      </div>
+      <div class="step-divider"></div>
+      <div class="step-item">
+        <span class="step-number">3</span>
+        <span>Order Confirmed ✓</span>
+      </div>
     </div>
 
-    <div id="cart-content-grid" style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; align-items: start;">
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 2.1rem; letter-spacing: -0.5px;">Your Shopping Cart</h1>
+      <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 4px;">Live server-calculated pricing, taxes, and delivery fees.</p>
+    </div>
+
+    <div id="cart-content-grid" style="display: grid; grid-template-columns: 1.55fr 1fr; gap: 32px; align-items: start;">
+      
       <!-- Left: Cart Items List -->
       <div>
-        <div id="restaurant-info-box" style="background: var(--primary-light); border: 1px solid rgba(255,107,0,0.2); padding: 14px 20px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <span style="font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Ordering from</span>
-            <div id="cart-restaurant-name" style="font-size: 1.15rem; font-weight: 700; color: var(--dark);">...</div>
+        <!-- Restaurant Ordering Box -->
+        <div id="restaurant-info-box" style="background: linear-gradient(135deg, #FFF3EB 0%, #FFFDF9 100%); border: 1px solid rgba(255,107,0,0.25); padding: 16px 22px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 42px; height: 42px; background: rgba(255,107,0,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+              🍽️
+            </div>
+            <div>
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Ordering Fresh From</span>
+              <div id="cart-restaurant-name" style="font-size: 1.2rem; font-weight: 800; color: var(--dark); line-height: 1.2;">...</div>
+            </div>
           </div>
-          <button id="clear-cart-btn" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: rgba(239,68,68,0.3);">
+          <button id="clear-cart-btn" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: rgba(239,68,68,0.3); font-weight: 700; border-radius: var(--radius-full); padding: 6px 14px;">
             Clear Cart 🗑️
           </button>
         </div>
 
-        <div id="cart-items-wrap" class="card" style="padding: 24px; background: #FFF;">
-          <!-- Loaded dynamically -->
+        <!-- Free Delivery Progress Bar -->
+        <div id="free-delivery-widget" class="free-delivery-bar">
+          <span style="font-size: 1.4rem;">🎁</span>
+          <div style="flex: 1;">
+            <div id="free-delivery-msg" style="font-size: 0.85rem; font-weight: 700; color: #065F46;">
+              Add dishes worth ₹500 or more to enjoy FREE delivery!
+            </div>
+            <div class="free-delivery-progress">
+              <div id="free-delivery-fill" class="free-delivery-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart Items Box -->
+        <div id="cart-items-wrap" class="card" style="padding: 24px; background: #FFF; border-radius: var(--radius-lg); box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+          <!-- Items inserted dynamically -->
+        </div>
+
+        <div style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
+          <a href="./restaurants.html" style="color: var(--primary); font-weight: 700; font-size: 0.9rem; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            ← Add more dishes from menu
+          </a>
         </div>
       </div>
 
       <!-- Right: Summary Card -->
-      <div class="card" style="padding: 28px; background: #FFF; position: sticky; top: 96px;">
-        <h3 style="font-size: 1.25rem; margin-bottom: 20px;">Order Summary</h3>
+      <div class="card" style="padding: 28px; background: #FFF; position: sticky; top: 96px; border-radius: var(--radius-lg); box-shadow: 0 6px 24px rgba(0,0,0,0.06); border: 1px solid var(--border);">
+        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+          <span>🧾</span> Order Summary
+        </h3>
 
-        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.95rem; margin-bottom: 20px;">
+        <!-- Coupon Code Promo Teaser -->
+        <div style="background: #F9FAFB; border: 1px dashed var(--border); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--dark);">
+            <span>🎟️</span> FOODNEST20
+            <span style="font-size: 0.72rem; color: #10B981; font-weight: 800; background: #D1FAE5; padding: 2px 6px; border-radius: var(--radius-full);">Active</span>
+          </div>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary);">Applied ✓</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.95rem; margin-bottom: 22px;">
           <div style="display: flex; justify-content: space-between;">
             <span style="color: var(--text-muted);">Item Subtotal</span>
-            <span id="summary-subtotal" style="font-weight: 600;">₹0.00</span>
+            <span id="summary-subtotal" style="font-weight: 700;">₹0.00</span>
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span style="color: var(--text-muted);">Taxes & GST (5%)</span>
-            <span id="summary-tax" style="font-weight: 600;">₹0.00</span>
+            <span id="summary-tax" style="font-weight: 700;">₹0.00</span>
           </div>
           <div style="display: flex; justify-content: space-between;">
             <span style="color: var(--text-muted);">Delivery Fee</span>
-            <span id="summary-delivery" style="font-weight: 600;">₹0.00</span>
+            <span id="summary-delivery" style="font-weight: 700;">₹0.00</span>
           </div>
-          <div style="border-top: 1px solid var(--border); padding-top: 14px; display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800;">
+          <div style="border-top: 1.5px dashed var(--border); padding-top: 14px; display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800;">
             <span>Grand Total</span>
             <span id="summary-total" style="color: var(--primary);">₹0.00</span>
           </div>
         </div>
 
-        <button id="checkout-cta-btn" class="btn btn-primary btn-full btn-lg">
+        <button id="checkout-cta-btn" class="btn btn-primary btn-full btn-lg" style="font-weight: 800; padding: 14px; border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(255,107,0,0.4); font-size: 1.05rem;">
           Proceed to Checkout →
         </button>
-        <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 12px;">
-          🔒 Secured checkout with Cash On Delivery
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <span>🔒</span> Verified secure order • Cash on Delivery supported
         </p>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div id="empty-cart-view" style="display: none; text-align: center; padding: 80px 20px;">
-      <div style="font-size: 4rem; margin-bottom: 16px;">🛒</div>
-      <h2 style="font-size: 1.8rem; margin-bottom: 8px;">Your Cart is Empty</h2>
-      <p style="color: var(--text-muted); margin-bottom: 24px;">Looks like you haven't added any culinary treats yet.</p>
-      <a href="./restaurants.html" class="btn btn-primary btn-lg">Explore Top Restaurants</a>
+    <!-- Empty State with 1-Click Quick Add -->
+    <div id="empty-cart-view" style="display: none; padding: 20px 0; animation: fadeIn 0.3s ease;">
+      <div style="text-align: center; max-width: 620px; margin: 0 auto 36px; padding: 48px 24px; background: #FFF; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0,0,0,0.05);">
+        <div style="font-size: 4rem; margin-bottom: 14px; animation: floatSlow 3s ease-in-out infinite;">🛒</div>
+        <h2 style="font-size: 1.9rem; letter-spacing: -0.5px; margin-bottom: 8px;">Your Cart is Hungry!</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 26px; line-height: 1.5;">
+          You haven't added any culinary treats yet. Explore popular meals below or jump straight to any kitchen!
+        </p>
+
+        <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+          <button id="add-sample-meal-btn" class="btn btn-primary btn-lg" style="box-shadow: 0 4px 16px rgba(255,107,0,0.38); font-weight: 800; border-radius: var(--radius-full); padding: 12px 26px;">
+            ⚡ Add Sample Meal & Test Cart (Fastfoods)
+          </button>
+          <a href="./restaurants.html" class="btn btn-outline btn-lg" style="border-radius: var(--radius-full); font-weight: 700; padding: 12px 24px;">
+            Browse All Kitchens 🍽️
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Add Popular Dishes Section -->
+      <div style="background: #FFF; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 1.3rem; font-weight: 800;">Popular Dishes — 1-Click Fast Add</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">Click "+ Add" to fill your cart with chef-prepared fresh food.</p>
+          </div>
+          <span class="status-badge status-accepted" style="font-size: 0.78rem; font-weight: 700;">
+            ✓ Instant Kitchen Delivery
+          </span>
+        </div>
+
+        <div id="quick-cart-dishes-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 22px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
     </div>
   </div>
 
   <script type="module">
     import { checkAuth, renderNavbar } from '../shared/js/auth.js';
-    import { getCart, clearCart, updateCartQuantity, apiRequest } from '../shared/js/api.js';
+    import { getCart, clearCart, updateCartQuantity, addToCart, apiRequest } from '../shared/js/api.js';
     import { showToast } from '../shared/js/toast.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      await checkAuth();
-      renderNavbar('cart');
+    const SAMPLE_DISHES = [
+      { id: 1, dishId: 1, name: 'Chicken Fry', price: 199.00, restaurantId: 1, restaurantName: 'Fastfoods', category: 'Fast Food', imageUrl: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600' },
+      { id: 3, dishId: 3, name: 'Crispy Chicken Burger', price: 159.00, restaurantId: 1, restaurantName: 'Fastfoods', category: 'Burgers', imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600' },
+      { id: 4, dishId: 4, name: 'Peri Peri French Fries', price: 99.00, restaurantId: 1, restaurantName: 'Fastfoods', category: 'Sides', imageUrl: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?w=600' },
+      { id: 2, dishId: 2, name: 'Chicken 65', price: 220.00, restaurantId: 1, restaurantName: 'Fastfoods', category: 'Starters', imageUrl: 'https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=600' }
+    ];
 
-      document.getElementById('clear-cart-btn').addEventListener('click', () => {
+    let activeQuickDishes = [...SAMPLE_DISHES];
+
+    // Immediate synchronous render from multi-tier storage
+    renderCartView();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Re-render immediately on DOM readiness
+      renderCartView();
+
+      // Async auth check in background
+      checkAuth().then(() => {
+        renderNavbar('cart');
+      });
+
+      document.getElementById('clear-cart-btn')?.addEventListener('click', () => {
         if (confirm('Are you sure you want to clear your cart?')) {
           clearCart();
           renderCartView();
         }
       });
 
-      document.getElementById('checkout-cta-btn').addEventListener('click', () => {
+      document.getElementById('checkout-cta-btn')?.addEventListener('click', () => {
         const cart = getCart();
         if (cart.items.length === 0) {
           showToast('Your cart is empty', 'error');
@@ -100,8 +323,123 @@
         window.location.href = './checkout.html';
       });
 
-      renderCartView();
+      // Sample Meal 1-Click Button
+      document.getElementById('add-sample-meal-btn')?.addEventListener('click', async () => {
+        await addToCart(SAMPLE_DISHES[0], 1);
+        await addToCart(SAMPLE_DISHES[1], 1);
+        renderCartView();
+      });
+
+      renderQuickDishes();
+      loadLiveDishesForQuickAdd();
+
+      // Multi-tab and reactive cart sync listeners
+      window.addEventListener('cart-updated', () => {
+        renderCartView();
+      });
+
+      window.addEventListener('storage', (e) => {
+        if (!e.key || e.key === 'foodnest_cart') {
+          renderCartView();
+        }
+      });
+
+      window.addEventListener('focus', () => {
+        renderCartView();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          renderCartView();
+        }
+      });
     });
+
+    async function loadLiveDishesForQuickAdd() {
+      try {
+        const res = await apiRequest('/restaurants');
+        if (res.success && Array.isArray(res.data)) {
+          const menuPromises = res.data.slice(0, 4).map(r => apiRequest(`/restaurants/${r.id}/menu`));
+          const menuResults = await Promise.allSettled(menuPromises);
+          const liveDishes = [];
+
+          menuResults.forEach(mr => {
+            if (mr.status === 'fulfilled' && mr.value.success && Array.isArray(mr.value.data)) {
+              liveDishes.push(...mr.value.data.slice(0, 2));
+            }
+          });
+
+          if (liveDishes.length > 0) {
+            activeQuickDishes = liveDishes;
+            renderQuickDishes();
+          }
+        }
+      } catch (err) {
+        console.debug('Using default quick dishes:', err);
+      }
+    }
+
+    function isDishVegetarian(d) {
+      const name = (d.name || '').toLowerCase();
+      const cat = (d.category || '').toLowerCase();
+      if (name.includes('chicken') || name.includes('mutton') || name.includes('fish') || name.includes('egg') || name.includes('meat') || name.includes('prawn') || name.includes('beef') || name.includes('pork')) {
+        return false;
+      }
+      return true;
+    }
+
+    function renderQuickDishes() {
+      const grid = document.getElementById('quick-cart-dishes-grid');
+      if (!grid) return;
+
+      grid.innerHTML = activeQuickDishes.map(d => {
+        const isVeg = isDishVegetarian(d);
+        const dietTag = isVeg 
+          ? `<span class="diet-badge veg" title="Vegetarian"></span>` 
+          : `<span class="diet-badge non-veg" title="Non-Vegetarian"></span>`;
+
+        return `
+          <div class="card" style="box-shadow: none; border: 1px solid var(--border); border-radius: var(--radius-md);">
+            <div class="card-img-wrap" style="height: 140px;">
+              <img src="${d.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'}" alt="${d.name}" class="card-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600';">
+              <span class="card-badge">${d.restaurantName || d.category || 'Featured'}</span>
+            </div>
+            <div class="card-body" style="padding: 14px;">
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                ${dietTag}
+                <h4 style="font-size: 0.95rem; font-weight: 700; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${d.name}</h4>
+              </div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">${d.category || 'Chef Special'}</div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 800; color: var(--dark); font-size: 1.05rem;">₹${d.price}</span>
+                <button class="btn btn-primary btn-sm quick-add-dish-btn" data-id="${d.id || d.dishId}" style="border-radius: var(--radius-md); font-weight: 700;">
+                  + Add 🛒
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      grid.querySelectorAll('.quick-add-dish-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const dishId = parseInt(btn.dataset.id);
+          const dish = activeQuickDishes.find(x => (x.id || x.dishId) === dishId);
+          if (dish) {
+            await addToCart({
+              id: dish.id || dish.dishId,
+              dishId: dish.id || dish.dishId,
+              name: dish.name,
+              price: dish.price,
+              imageUrl: dish.imageUrl,
+              restaurantId: dish.restaurantId,
+              restaurantName: dish.restaurantName
+            }, 1);
+            renderCartView();
+          }
+        });
+      });
+    }
 
     async function renderCartView() {
       const cart = getCart();
@@ -118,52 +456,93 @@
       emptyView.style.display = 'none';
       document.getElementById('cart-restaurant-name').textContent = cart.restaurantName || 'Restaurant';
 
-      // Call server calculation API to verify prices and totals
-      const calcPayload = {
-        items: cart.items.map(i => ({ dishId: i.dishId, quantity: i.quantity }))
-      };
+      // 1. Render items IMMEDIATELY from cart state
+      const itemsWrap = document.getElementById('cart-items-wrap');
+      itemsWrap.innerHTML = cart.items.map(item => {
+        const unitPrice = parseFloat(item.price || item.unitPrice || 0);
+        const itemTotal = (unitPrice * (item.quantity || 1)).toFixed(2);
+        const dId = item.dishId || item.id;
+        const isVeg = isDishVegetarian(item);
+        const dietTag = isVeg 
+          ? `<span class="diet-badge veg" title="Vegetarian"></span>` 
+          : `<span class="diet-badge non-veg" title="Non-Vegetarian"></span>`;
 
-      const calcRes = await apiRequest('/cart/calculate', {
-        method: 'POST',
-        body: JSON.stringify(calcPayload)
-      });
-
-      if (calcRes.success && calcRes.data) {
-        const d = calcRes.data;
-        document.getElementById('summary-subtotal').textContent = `₹${d.subtotal}`;
-        document.getElementById('summary-tax').textContent = `₹${d.taxAmount}`;
-        document.getElementById('summary-delivery').textContent = `₹${d.deliveryFee}`;
-        document.getElementById('summary-total').textContent = `₹${d.totalAmount}`;
-
-        // Render items list
-        const itemsWrap = document.getElementById('cart-items-wrap');
-        itemsWrap.innerHTML = d.items.map(item => `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border); gap: 16px;">
+        return `
+          <div class="cart-item-row">
             <div style="display: flex; align-items: center; gap: 16px;">
-              <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'}" style="width: 64px; height: 64px; object-fit: cover; border-radius: var(--radius-md);">
+              <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150'}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150';" style="width: 68px; height: 68px; object-fit: cover; border-radius: var(--radius-md); box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
               <div>
-                <h4 style="font-size: 1.05rem;">${item.name}</h4>
-                <div style="color: var(--text-muted); font-size: 0.88rem;">₹${item.unitPrice} each</div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                  ${dietTag}
+                  <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0;">${item.name}</h4>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.88rem;">₹${unitPrice.toFixed(2)} each</div>
               </div>
             </div>
 
             <div style="display: flex; align-items: center; gap: 20px;">
-              <div class="qty-stepper">
-                <button class="qty-btn" onclick="window.changeQty(${item.dishId}, ${item.quantity - 1})">-</button>
-                <span class="qty-val">${item.quantity}</span>
-                <button class="qty-btn" onclick="window.changeQty(${item.dishId}, ${item.quantity + 1})">+</button>
+              <div class="cart-qty-stepper">
+                <button class="cart-qty-btn" onclick="window.changeQty(${dId}, ${(item.quantity || 1) - 1})">−</button>
+                <span class="cart-qty-val">${item.quantity || 1}</span>
+                <button class="cart-qty-btn" onclick="window.changeQty(${dId}, ${(item.quantity || 1) + 1})">+</button>
               </div>
-              <div style="font-weight: 700; font-size: 1.1rem; min-width: 70px; text-align: right;">
-                ₹${item.itemTotal}
+              <div style="font-weight: 800; font-size: 1.15rem; min-width: 75px; text-align: right; color: var(--dark);">
+                ₹${itemTotal}
               </div>
-              <button onclick="window.changeQty(${item.dishId}, 0)" style="background: none; border: none; cursor: pointer; color: var(--danger); font-size: 1.1rem;" title="Remove Item">
+              <button onclick="window.changeQty(${dId}, 0)" style="background: none; border: none; cursor: pointer; color: var(--danger); font-size: 1.2rem; padding: 4px;" title="Remove Item">
                 ✕
               </button>
             </div>
           </div>
-        `).join('');
-      } else {
-        showToast(calcRes.message || 'Error validating cart pricing', 'error');
+        `;
+      }).join('');
+
+      // 2. Immediate local calculations
+      const subtotal = cart.items.reduce((sum, item) => sum + (parseFloat(item.price || item.unitPrice || 0) * (item.quantity || 1)), 0);
+      const tax = +(subtotal * 0.05).toFixed(2);
+      const delivery = subtotal >= 500 ? 0.00 : 40.00;
+      const total = +(subtotal + tax + delivery).toFixed(2);
+
+      document.getElementById('summary-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+      document.getElementById('summary-tax').textContent = `₹${tax.toFixed(2)}`;
+      document.getElementById('summary-delivery').textContent = delivery === 0 ? 'FREE' : `₹${delivery.toFixed(2)}`;
+      document.getElementById('summary-total').textContent = `₹${total.toFixed(2)}`;
+
+      // Update free delivery bar
+      const fillEl = document.getElementById('free-delivery-fill');
+      const msgEl = document.getElementById('free-delivery-msg');
+      if (fillEl && msgEl) {
+        if (subtotal >= 500) {
+          fillEl.style.width = '100%';
+          msgEl.innerHTML = `🎉 <strong>Congratulations!</strong> You unlocked <strong>FREE Delivery</strong> on this order!`;
+        } else {
+          const remaining = (500 - subtotal).toFixed(2);
+          const percent = Math.min(100, Math.round((subtotal / 500) * 100));
+          fillEl.style.width = `${percent}%`;
+          msgEl.innerHTML = `Add dishes worth <strong>₹${remaining}</strong> more to unlock <strong>FREE delivery</strong>!`;
+        }
+      }
+
+      // 3. Sync with live server calculate API in background
+      try {
+        const calcPayload = {
+          items: cart.items.map(i => ({ dishId: i.dishId || i.id, quantity: i.quantity || 1 }))
+        };
+
+        const calcRes = await apiRequest('/cart/calculate', {
+          method: 'POST',
+          body: JSON.stringify(calcPayload)
+        });
+
+        if (calcRes.success && calcRes.data) {
+          const d = calcRes.data;
+          document.getElementById('summary-subtotal').textContent = `₹${d.subtotal}`;
+          document.getElementById('summary-tax').textContent = `₹${d.taxAmount}`;
+          document.getElementById('summary-delivery').textContent = `₹${d.deliveryFee}`;
+          document.getElementById('summary-total').textContent = `₹${d.totalAmount}`;
+        }
+      } catch (err) {
+        console.debug('Server calculation synced with local state:', err);
       }
     }
 

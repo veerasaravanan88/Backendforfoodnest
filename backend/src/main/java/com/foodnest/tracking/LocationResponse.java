@@ -107,4 +107,12 @@ public class LocationResponse {
     public void setIsLiveTrackingActive(Boolean isLiveTrackingActive) {
         this.isLiveTrackingActive = isLiveTrackingActive;
     }
+
+    public Boolean getLiveTrackingActive() {
+        return isLiveTrackingActive;
+    }
+
+    public void setLiveTrackingActive(Boolean liveTrackingActive) {
+        this.isLiveTrackingActive = liveTrackingActive;
+    }
 }

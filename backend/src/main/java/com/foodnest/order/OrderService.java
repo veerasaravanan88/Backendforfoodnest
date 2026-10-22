@@ -74,10 +74,25 @@ public class OrderService {
     }
 
     @Transactional
+    public OrderDto createOrder(UserPrincipal principal, CreateOrderRequest req) {
+        if (principal == null || principal.getRole() != UserRole.CUSTOMER) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: Only authenticated customers can place food orders.");
+        }
+        Customer customer = customerRepository.findById(principal.getId())
+                .orElseGet(() -> customerRepository.findByEmail(principal.getUsername())
+                        .orElseThrow(() -> new ResourceNotFoundException("Customer account not found for: " + principal.getUsername())));
+
+        return createOrderForCustomer(customer, req);
+    }
+
+    @Transactional
     public OrderDto createOrder(Long customerId, CreateOrderRequest req) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
+        return createOrderForCustomer(customer, req);
+    }
 
+    private OrderDto createOrderForCustomer(Customer customer, CreateOrderRequest req) {
         // Recheck dish availability, pricing, single-restaurant rule via server CartService
         CartCalculationResponse cartCalc = cartService.calculateCart(req.getItems());
 
@@ -148,6 +163,14 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public List<OrderDto> getCustomerOrdersByPrincipal(UserPrincipal principal) {
+        if (principal == null || principal.getRole() != UserRole.CUSTOMER) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: Customer account required.");
+        }
+        return getCustomerOrders(principal.getId());
+    }
+
+    @Transactional(readOnly = true)
     public List<OrderDto> getCustomerOrders(Long customerId) {
         return orderRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
                 .map(this::enrichOrderDto)
@@ -197,8 +220,8 @@ public class OrderService {
         order.setStatus(newStatus);
         Order savedOrder = orderRepository.save(order);
 
-        // CRITICAL WORKFLOW: When Restaurant marks order READY -> trigger automatic delivery assignment!
-        if (newStatus == OrderStatus.READY) {
+        // Automatic delivery partner assignment when restaurant ACCEPTS or marks food READY!
+        if (newStatus == OrderStatus.ACCEPTED || newStatus == OrderStatus.READY) {
             deliveryAssignmentService.assignDeliveryMan(savedOrder);
         }
 
@@ -213,10 +236,32 @@ public class OrderService {
     }
 
     @Transactional
+    public OrderDto cancelOrderByPrincipal(UserPrincipal principal, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+
+        boolean isAuthorized = false;
+        if (principal.getRole() == UserRole.CUSTOMER && order.getCustomer().getId().equals(principal.getId())) {
+            isAuthorized = true;
+        } else if (order.getCustomer() != null && order.getCustomer().getEmail().equalsIgnoreCase(principal.getUsername())) {
+            isAuthorized = true;
+        }
+
+        if (!isAuthorized) {
+            throw new ForbiddenException("Order does not belong to your account.");
+        }
+
+        return cancelOrderInternal(order);
+    }
+
+    @Transactional
     public OrderDto cancelOrderByCustomer(Long customerId, Long orderId) {
         Order order = orderRepository.findByIdAndCustomerId(orderId, customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found or does not belong to your account."));
+        return cancelOrderInternal(order);
+    }
 
+    private OrderDto cancelOrderInternal(Order order) {
         if (order.getStatus() != OrderStatus.PLACED) {
             throw new BadRequestException("Order cannot be cancelled in state: " + order.getStatus() + ". Only newly placed orders can be cancelled.");
         }
@@ -250,13 +295,18 @@ public class OrderService {
         boolean isAuthorized = false;
         if (principal.getRole() == UserRole.CUSTOMER && order.getCustomer().getId().equals(principal.getId())) {
             isAuthorized = true;
+        } else if (order.getCustomer() != null && order.getCustomer().getEmail().equalsIgnoreCase(principal.getUsername())) {
+            isAuthorized = true;
         } else if (principal.getRole() == UserRole.RESTAURANT && order.getRestaurant().getId().equals(principal.getId())) {
             isAuthorized = true;
         } else if (principal.getRole() == UserRole.DELIVERY_MAN) {
             Optional<DeliveryAssignment> assignmentOpt = assignmentRepository.findByOrderId(orderId);
-            if (assignmentOpt.isPresent() && assignmentOpt.get().getDeliveryMan() != null
-                    && assignmentOpt.get().getDeliveryMan().getId().equals(principal.getId())) {
-                isAuthorized = true;
+            if (assignmentOpt.isPresent()) {
+                DeliveryAssignment da = assignmentOpt.get();
+                if ((da.getDeliveryMan() != null && da.getDeliveryMan().getId().equals(principal.getId()))
+                        || (da.getStatus() == AssignmentStatus.AWAITING_ASSIGNMENT)) {
+                    isAuthorized = true;
+                }
             }
         }
 
@@ -294,9 +344,10 @@ public class OrderService {
             assignment.setStatus(AssignmentStatus.DELIVERED);
             assignment.setDeliveredAt(LocalDateTime.now());
 
-            // Release delivery man availability
+            // Release delivery man availability and touch lastActiveAt
             DeliveryMan rider = assignment.getDeliveryMan();
             rider.setIsAvailable(true);
+            rider.setLastActiveAt(LocalDateTime.now());
             deliveryManRepository.save(rider);
 
             // Mark COD payment paid
