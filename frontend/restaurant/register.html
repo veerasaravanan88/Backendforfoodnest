@@ -1,10 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Partner With Us — Register Restaurant | AdvanceFoodnest</title>
   <link rel="stylesheet" href="../shared/css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body style="background: radial-gradient(circle at top right, #FFF3EB 0%, #FFFDF9 60%);">
 
@@ -19,6 +21,9 @@
           Reach thousands of hungry foodies in your city with AdvanceFoodnest.
         </p>
       </div>
+
+      <!-- Alert banner -->
+      <div id="auth-alert" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4;"></div>
 
       <form id="restaurant-register-form">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -64,6 +69,31 @@
           <textarea id="address" class="form-textarea" rows="3" placeholder="Commercial Unit, Street, Neighborhood, City" required></textarea>
         </div>
 
+        <!-- Manual Hotel Map Location Picker -->
+        <div class="form-group" style="background: #F9FAFB; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin-bottom: 0; font-weight: 700; color: var(--dark);">📍 Hotel Location on Map</label>
+            <button type="button" id="detect-location-btn" class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 5px 12px; background: #FFF; border-color: var(--primary); color: var(--primary);">
+              🎯 Detect My GPS Location
+            </button>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+            Click on the map or drag the orange pin to set your exact hotel location. Riders and customers will see this location.
+          </p>
+          <div id="hotel-map" style="height: 250px; border-radius: var(--radius-md); border: 1px solid #D1D5DB; margin-bottom: 10px; z-index: 1;"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label class="form-label" for="latitude" style="font-size: 0.8rem; margin-bottom: 4px;">Latitude</label>
+              <input type="number" step="any" id="latitude" class="form-input" placeholder="e.g. 9.7206" required>
+            </div>
+            <div>
+              <label class="form-label" for="longitude" style="font-size: 0.8rem; margin-bottom: 4px;">Longitude</label>
+              <input type="number" step="any" id="longitude" class="form-input" placeholder="e.g. 77.8517" required>
+            </div>
+          </div>
+          <div id="map-loc-label" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 6px;"></div>
+        </div>
+
         <button type="submit" id="submit-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
           Register Restaurant
         </button>
@@ -76,60 +106,198 @@
   </div>
 
   <script type="module">
-    import { checkAuth, renderNavbar } from '../shared/js/auth.js';
+    import { checkAuth, saveAuthSession, renderNavbar } from '../shared/js/auth.js';
     import { apiRequest } from '../shared/js/api.js';
     import { showToast } from '../shared/js/toast.js';
+    import { geocodeAddress } from '../shared/js/geo.js';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await checkAuth();
-      if (user && user.role === 'RESTAURANT') {
-        window.location.href = './dashboard.html';
+    function setAlert(message, type = 'error') {
+      const alert = document.getElementById('auth-alert');
+      if (!alert) return;
+      if (!message) {
+        alert.style.display = 'none';
         return;
       }
-      renderNavbar();
+      alert.style.display = 'block';
+      if (type === 'error') {
+        alert.style.background = '#FEE2E2';
+        alert.style.border = '1px solid #FCA5A5';
+        alert.style.color = '#991B1B';
+      } else if (type === 'success') {
+        alert.style.background = '#DCFCE7';
+        alert.style.border = '1px solid #86EFAC';
+        alert.style.color = '#166534';
+      }
+      alert.innerHTML = message;
+    }
 
-      const form = document.getElementById('restaurant-register-form');
-      const submitBtn = document.getElementById('submit-btn');
+    // --- Hotel Map Initialization ---
+    let hotelMap = null;
+    let hotelMarker = null;
+    let initialLat = 9.7206; // Default to local region (T.Kallupatti / Madurai)
+    let initialLng = 77.8517;
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Registering restaurant...';
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const locLabel = document.getElementById('map-loc-label');
 
-        const payload = {
-          name: document.getElementById('name').value.trim(),
-          ownerName: document.getElementById('ownerName').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          phone: document.getElementById('phone').value.trim(),
-          cuisineType: document.getElementById('cuisineType').value.trim(),
-          password: document.getElementById('password').value,
-          imageUrl: document.getElementById('imageUrl').value.trim() || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
-          address: document.getElementById('address').value.trim()
-        };
+    function updateMarkerPos(lat, lng, labelText = null) {
+      lat = parseFloat(parseFloat(lat).toFixed(6));
+      lng = parseFloat(parseFloat(lng).toFixed(6));
+      latInput.value = lat;
+      lngInput.value = lng;
+      if (hotelMarker) {
+        hotelMarker.setLatLng([lat, lng]);
+      }
+      if (hotelMap) {
+        hotelMap.setView([lat, lng]);
+      }
+      if (labelText) {
+        locLabel.textContent = `📍 ${labelText}`;
+      } else {
+        locLabel.textContent = `📍 Set to: ${lat}, ${lng}`;
+      }
+    }
 
+    function initHotelMap() {
+      latInput.value = initialLat;
+      lngInput.value = initialLng;
+
+      hotelMap = L.map('hotel-map', { zoomControl: true }).setView([initialLat, initialLng], 14);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(hotelMap);
+
+      const hotelIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="background: #FF6B00; color: #FFF; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 3px solid #FFF; box-shadow: 0 4px 12px rgba(255,107,0,0.6); cursor: grab;">🏨</div>',
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
+      });
+
+      hotelMarker = L.marker([initialLat, initialLng], {
+        icon: hotelIcon,
+        draggable: true
+      }).addTo(hotelMap);
+
+      hotelMarker.on('dragend', (e) => {
+        const pos = e.target.getLatLng();
+        updateMarkerPos(pos.lat, pos.lng);
+      });
+
+      hotelMap.on('click', (e) => {
+        updateMarkerPos(e.latlng.lat, e.latlng.lng);
+      });
+
+      // If user types numbers manually in lat/lng inputs
+      latInput.addEventListener('input', () => {
+        const val = parseFloat(latInput.value);
+        if (!isNaN(val) && hotelMarker) updateMarkerPos(val, lngInput.value);
+      });
+      lngInput.addEventListener('input', () => {
+        const val = parseFloat(lngInput.value);
+        if (!isNaN(val) && hotelMarker) updateMarkerPos(latInput.value, val);
+      });
+
+      // Detect GPS button
+      document.getElementById('detect-location-btn')?.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+          showToast('Geolocation is not supported by your browser', 'error');
+          return;
+        }
+        showToast('Detecting your GPS location...', 'info');
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            updateMarkerPos(pos.coords.latitude, pos.coords.longitude, 'Your Current Location (GPS)');
+            showToast('GPS location detected & pinned!', 'success');
+          },
+          (err) => {
+            showToast('Unable to retrieve GPS: ' + err.message, 'error');
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+
+      // When address changes, attempt auto-geocoding to move the pin
+      const addressInput = document.getElementById('address');
+      addressInput.addEventListener('blur', async () => {
+        const addr = addressInput.value.trim();
+        if (addr.length > 3) {
+          try {
+            const loc = await geocodeAddress(addr);
+            if (loc && loc.lat && loc.lng) {
+              updateMarkerPos(loc.lat, loc.lng, loc.label);
+              showToast(`Map pinned to ${loc.label}`, 'info');
+            }
+          } catch (e) {
+            console.debug('Geocode error:', e);
+          }
+        }
+      });
+    }
+
+    setTimeout(initHotelMap, 200);
+
+    const form = document.getElementById('restaurant-register-form');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setAlert('', '');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Registering restaurant & logging in...';
+
+      const payload = {
+        name: document.getElementById('name').value.trim(),
+        ownerName: document.getElementById('ownerName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        cuisineType: document.getElementById('cuisineType').value.trim(),
+        password: document.getElementById('password').value,
+        imageUrl: document.getElementById('imageUrl').value.trim() || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
+        address: document.getElementById('address').value.trim(),
+        latitude: parseFloat(document.getElementById('latitude').value),
+        longitude: parseFloat(document.getElementById('longitude').value)
+      };
+
+      try {
         const res = await apiRequest('/auth/restaurant/register', {
           method: 'POST',
           body: JSON.stringify(payload)
         });
 
         if (res.success) {
-          showToast('Restaurant registered successfully! Logging you in...', 'success');
-          // Auto login
-          const loginRes = await apiRequest('/auth/restaurant/login', {
-            method: 'POST',
-            body: JSON.stringify({ email: payload.email, password: payload.password })
-          });
-          if (loginRes.success) {
-            setTimeout(() => window.location.href = './dashboard.html', 500);
-          } else {
-            setTimeout(() => window.location.href = './login.html', 500);
-          }
+          saveAuthSession(res.data, res.data?.token, 'RESTAURANT');
+          setAlert('✅ Restaurant registered! You are now logged in. Loading dashboard...', 'success');
+          showToast('Welcome partner! Loading dashboard...', 'success');
+          setTimeout(() => {
+            window.location.href = './dashboard.html';
+          }, 300);
         } else {
-          showToast(res.message || 'Registration failed', 'error');
+          const err = res.message || 'Registration failed';
+          setAlert(`❌ ${err}`, 'error');
+          showToast(err, 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Register Restaurant';
         }
-      });
+      } catch (err) {
+        setAlert('❌ Cannot reach backend server. Please check your network and ensure Spring Boot is running.', 'error');
+        showToast('Backend connection failed', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register Restaurant';
+      }
+    });
+
+    renderNavbar();
+    checkAuth('RESTAURANT').then(user => {
+      if (user && user.role === 'RESTAURANT') {
+        window.location.href = './dashboard.html';
+      }
+    }).catch(err => {
+      console.debug('Background checkAuth error:', err);
     });
   </script>
 </body>

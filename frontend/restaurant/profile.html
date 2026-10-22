@@ -1,10 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kitchen Profile — AdvanceFoodnest</title>
   <link rel="stylesheet" href="../shared/css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
@@ -74,6 +76,31 @@
               <textarea id="address" class="form-textarea" rows="3" required></textarea>
             </div>
 
+            <!-- Manual Hotel Map Location Picker -->
+            <div class="form-group" style="background: #F9FAFB; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="form-label" style="margin-bottom: 0; font-weight: 700; color: var(--dark);">📍 Hotel Location on Map</label>
+                <button type="button" id="detect-location-btn" class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 5px 12px; background: #FFF; border-color: var(--primary); color: var(--primary);">
+                  🎯 Detect My GPS Location
+                </button>
+              </div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+                Click on the map or drag the pin to set your exact hotel location. Delivery drivers and customers will navigate here.
+              </p>
+              <div id="hotel-map" style="height: 250px; border-radius: var(--radius-md); border: 1px solid #D1D5DB; margin-bottom: 10px; z-index: 1;"></div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                  <label class="form-label" for="latitude" style="font-size: 0.8rem; margin-bottom: 4px;">Latitude</label>
+                  <input type="number" step="any" id="latitude" class="form-input" placeholder="e.g. 9.7206" required>
+                </div>
+                <div>
+                  <label class="form-label" for="longitude" style="font-size: 0.8rem; margin-bottom: 4px;">Longitude</label>
+                  <input type="number" step="any" id="longitude" class="form-input" placeholder="e.g. 77.8517" required>
+                </div>
+              </div>
+              <div id="map-loc-label" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 6px;"></div>
+            </div>
+
             <button type="submit" id="save-btn" class="btn btn-primary btn-full btn-lg" style="margin-top: 10px;">
               Save Kitchen Profile
             </button>
@@ -87,6 +114,112 @@
     import { requireAuth, renderNavbar } from '../shared/js/auth.js';
     import { apiRequest } from '../shared/js/api.js';
     import { showToast } from '../shared/js/toast.js';
+    import { geocodeAddress } from '../shared/js/geo.js';
+
+    let hotelMap = null;
+    let hotelMarker = null;
+    let currentLat = 9.7206;
+    let currentLng = 77.8517;
+
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    const locLabel = document.getElementById('map-loc-label');
+
+    function updateMarkerPos(lat, lng, labelText = null) {
+      lat = parseFloat(parseFloat(lat).toFixed(6));
+      lng = parseFloat(parseFloat(lng).toFixed(6));
+      latInput.value = lat;
+      lngInput.value = lng;
+      if (hotelMarker) {
+        hotelMarker.setLatLng([lat, lng]);
+      }
+      if (hotelMap) {
+        hotelMap.setView([lat, lng]);
+      }
+      if (labelText) {
+        locLabel.textContent = `📍 ${labelText}`;
+      } else {
+        locLabel.textContent = `📍 Set to: ${lat}, ${lng}`;
+      }
+    }
+
+    function initHotelMap(lat, lng) {
+      if (hotelMap) return;
+
+      currentLat = lat || 9.7206;
+      currentLng = lng || 77.8517;
+
+      hotelMap = L.map('hotel-map', { zoomControl: true }).setView([currentLat, currentLng], 14);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(hotelMap);
+
+      const hotelIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="background: #FF6B00; color: #FFF; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 3px solid #FFF; box-shadow: 0 4px 12px rgba(255,107,0,0.6); cursor: grab;">🏨</div>',
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
+      });
+
+      hotelMarker = L.marker([currentLat, currentLng], {
+        icon: hotelIcon,
+        draggable: true
+      }).addTo(hotelMap);
+
+      hotelMarker.on('dragend', (e) => {
+        const pos = e.target.getLatLng();
+        updateMarkerPos(pos.lat, pos.lng);
+      });
+
+      hotelMap.on('click', (e) => {
+        updateMarkerPos(e.latlng.lat, e.latlng.lng);
+      });
+
+      latInput.addEventListener('input', () => {
+        const val = parseFloat(latInput.value);
+        if (!isNaN(val) && hotelMarker) updateMarkerPos(val, lngInput.value);
+      });
+      lngInput.addEventListener('input', () => {
+        const val = parseFloat(lngInput.value);
+        if (!isNaN(val) && hotelMarker) updateMarkerPos(latInput.value, val);
+      });
+
+      document.getElementById('detect-location-btn')?.addEventListener('click', () => {
+        if (!navigator.geolocation) {
+          showToast('Geolocation is not supported by your browser', 'error');
+          return;
+        }
+        showToast('Detecting your GPS location...', 'info');
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            updateMarkerPos(pos.coords.latitude, pos.coords.longitude, 'Your Current Location (GPS)');
+            showToast('GPS location updated & pinned!', 'success');
+          },
+          (err) => {
+            showToast('Unable to retrieve GPS: ' + err.message, 'error');
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+
+      const addressInput = document.getElementById('address');
+      addressInput.addEventListener('blur', async () => {
+        const addr = addressInput.value.trim();
+        if (addr.length > 3) {
+          try {
+            const loc = await geocodeAddress(addr);
+            if (loc && loc.lat && loc.lng) {
+              updateMarkerPos(loc.lat, loc.lng, loc.label);
+              showToast(`Map pinned to ${loc.label}`, 'info');
+            }
+          } catch (e) {
+            console.debug('Geocode error:', e);
+          }
+        }
+      });
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await requireAuth('RESTAURANT');
@@ -95,7 +228,7 @@
 
       document.getElementById('sidebar-restaurant-name').textContent = user.fullName || 'My Restaurant';
 
-      loadProfile();
+      await loadProfile();
 
       document.getElementById('restaurant-profile-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -109,7 +242,9 @@
           phone: document.getElementById('phone').value.trim(),
           cuisineType: document.getElementById('cuisineType').value.trim(),
           imageUrl: document.getElementById('imageUrl').value.trim(),
-          address: document.getElementById('address').value.trim()
+          address: document.getElementById('address').value.trim(),
+          latitude: parseFloat(document.getElementById('latitude').value),
+          longitude: parseFloat(document.getElementById('longitude').value)
         };
 
         const res = await apiRequest('/restaurant/me', {
@@ -118,7 +253,7 @@
         });
 
         if (res.success) {
-          showToast('Profile updated successfully!', 'success');
+          showToast('Kitchen profile & map location updated successfully!', 'success');
         } else {
           showToast(res.message || 'Error updating profile', 'error');
         }
@@ -139,6 +274,11 @@
         document.getElementById('cuisineType').value = p.cuisineType;
         document.getElementById('imageUrl').value = p.imageUrl || '';
         document.getElementById('address').value = p.address;
+
+        const lat = p.latitude || 9.7206;
+        const lng = p.longitude || 77.8517;
+        initHotelMap(lat, lng);
+        updateMarkerPos(lat, lng, p.name);
       }
     }
   </script>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -123,16 +123,20 @@
   <script type="module">
     import { requireAuth, renderNavbar } from '../shared/js/auth.js';
     import { apiRequest } from '../shared/js/api.js';
+    import { geocodeAddress } from '../shared/js/geo.js?v=3';
 
     const ORDER_STEPS = ['PLACED', 'ACCEPTED', 'PREPARING', 'READY', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
     let map = null;
+    let customerMarker = null;
+    let restaurantMarker = null;
+    let routeLine = null;
     let riderMarker = null;
-    let defaultCoords = [12.9716, 77.5946]; // Bengaluru default coordinates
+    let custCoords = [9.7206, 77.8517]; // Defaults to T.Kallupatti / Madurai
     let pollInterval = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const user = await requireAuth();
+      const user = await requireAuth('CUSTOMER');
       if (!user) return;
       renderNavbar('orders');
 
@@ -155,21 +159,12 @@
     });
 
     function initMap() {
-      map = L.map('tracking-map').setView(defaultCoords, 14);
+      map = L.map('tracking-map', { zoomControl: true }).setView(custCoords, 14);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
-
-      // Destination Marker (Customer location approx)
-      const customerIcon = L.divIcon({
-        className: 'custom-pin',
-        html: '<div style="background: #171717; color: #FFF; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #FFF; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">🏠</div>',
-        iconSize: [34, 34],
-        iconAnchor: [17, 17]
-      });
-      L.marker(defaultCoords, { icon: customerIcon }).addTo(map).bindPopup('Delivery Address');
     }
 
     async function loadOrderDetails(orderId) {
@@ -190,6 +185,71 @@
       document.getElementById('order-restaurant-addr').textContent = o.restaurantAddress;
       document.getElementById('order-delivery-addr').textContent = o.deliveryAddress;
       document.getElementById('order-total-price').textContent = `₹${o.totalAmount}`;
+
+      // Dynamically resolve real customer and kitchen coordinates
+      const customerLoc = await geocodeAddress(o.deliveryAddress, o.restaurantAddress);
+      
+      let restCoords;
+      if (o.restaurantLatitude != null && o.restaurantLongitude != null) {
+        restCoords = [o.restaurantLatitude, o.restaurantLongitude];
+      } else {
+        const restaurantLoc = await geocodeAddress(o.restaurantAddress, o.deliveryAddress);
+        restCoords = [restaurantLoc.lat, restaurantLoc.lng];
+      }
+
+      custCoords = [customerLoc.lat, customerLoc.lng];
+
+      // Update Customer Drop-off Marker
+      const customerIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="background: #E53E3E; color: #FFF; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 3px solid #FFF; box-shadow: 0 4px 12px rgba(229,62,62,0.6);">🏠</div>',
+        iconSize: [38, 38],
+        iconAnchor: [19, 19]
+      });
+
+      if (!customerMarker) {
+        customerMarker = L.marker(custCoords, { icon: customerIcon })
+          .addTo(map)
+          .bindPopup(`<strong>Delivery Address</strong><br>${o.deliveryAddress}<br><span style="color:#666; font-size:0.8rem;">${customerLoc.label}</span>`);
+      } else {
+        customerMarker.setLatLng(custCoords);
+      }
+
+      // Update Kitchen Pickup Marker
+      const restIcon = L.divIcon({
+        className: 'custom-pin',
+        html: '<div style="background: #3182CE; color: #FFF; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; border: 2px solid #FFF; box-shadow: 0 4px 10px rgba(49,130,206,0.5);">🏬</div>',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
+
+      if (!restaurantMarker) {
+        restaurantMarker = L.marker(restCoords, { icon: restIcon })
+          .addTo(map)
+          .bindPopup(`<strong>${o.restaurantName}</strong><br>${o.restaurantAddress}`);
+      } else {
+        restaurantMarker.setLatLng(restCoords);
+      }
+
+      // Draw route connecting restaurant and customer
+      if (routeLine) {
+        routeLine.remove();
+      }
+      routeLine = L.polyline([restCoords, custCoords], {
+        color: '#FF6B00',
+        weight: 4,
+        dashArray: '8, 8',
+        opacity: 0.85
+      }).addTo(map);
+
+      // Fit map bounds to view both locations
+      const bounds = L.latLngBounds([custCoords, restCoords]);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+
+      const note = document.getElementById('map-status-note');
+      if (note) {
+        note.textContent = `Destination: ${customerLoc.label}`;
+      }
 
       const itemsCont = document.getElementById('order-items-container');
       itemsCont.innerHTML = o.items.map(i => `
